@@ -1,0 +1,40 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title> test 1 </title>
+		<script src="http://underscorejs.org/underscore-min.js"></script>
+		<script src="http://backbonejs.org/backbone.js"></script>
+	</head>
+
+	<body>
+		<script>
+		
+			var people = [];
+			
+			var Person = Backbone.Model.extend({
+				defaults : {
+					nom : "",
+					age : 0,
+					taille : 2
+				},
+				initialize: function () {
+					//alert("welcome to my world!");
+					this.on("change:nom", function(model){
+						alert("change my name to : " + this.get("nom"));
+					});
+					this.on("change:age", function(model){
+						alert("change my age to : "+this.get("age"));
+					});
+				}
+			});
+			var bob = new Person({ nom : "bob", age : 32});
+			/*bob.set({age : 22, nom : "robert"});
+			bob.set({nom : "bob"});
+			/*var age = bob.get("age"), nom = bob.get("nom"), taille = bob.get("taille");
+			var result = age + " " + nom + " " + taille;
+			alert(result+ " "+age);
+			bob.set({child : "ryan"})
+			alert(bob.get("child"));*/
+		</script>
+	</body>
+</html>

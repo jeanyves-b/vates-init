@@ -1,0 +1,44 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title> test view </title>
+		<script src="http://underscorejs.org/underscore-min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="http://backbonejs.org/backbone.js"></script>
+	</head>
+
+	<body>
+		</script>
+		<script type="text/template" id="bob">
+			<label>nb clics</label>
+			<input type="button" id="button" value="minus"></input>
+			<output type="text" id="outputclic"><%= clics %></output>
+			<input type="button" id="button" value="plus"></input>
+		</script>
+		<div id="container"></div>
+		<div id="clic"></div>
+		<script>
+			var clics = 0;
+			clicView = Backbone.View.extend({
+				render: function(){
+					var template = _.template( $("#bob").html(), {});
+					this.$el.html(template);
+				}
+				events: {
+					"click input[type=button]": "doplus";
+					"click input[type=button]": "dominus";
+				},
+				doplus: function(event){
+					clics += 1;
+					clic_View.render();
+				}
+				dominus: function(event){
+					clics-= 1;
+					clic_View.render();
+				}
+			});
+			var clic_View = new clicView({ el: $("#clic")});
+			clic_View.render();
+		</script>
+	</body>
+</html>
