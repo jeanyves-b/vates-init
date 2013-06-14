@@ -9,32 +9,50 @@
 
 	<body>
 		</script>
-		<script type="text/template" id="bob">
-			<label>nb clics</label>
-			<input type="button" id="button" value="minus"></input>
-			<output type="text" id="outputclic"><%= clics %></output>
-			<input type="button" id="button" value="plus"></input>
+		<script type="text/template" id="pal">
+			<output type="text" id="outputclic">sur la page précédente, vous avez cliquer <%= clics %> fois</output>
+			<input type="button" id="switch" value="switch"></input>
 		</script>
-		<div id="container"></div>
+		<script type="text/template" id="bob">
+			<input type="button" id="minus" value="minus"></input>
+			<output type="text" id="outputclic"><%= value %></output>
+			<input type="button" id="plus" value="plus"><br><br></input>
+			<input type="button" id="switch" value="switch"></input>
+		</script>
 		<div id="clic"></div>
 		<script>
-			var clics = 0;
+			var value = 0, clics = 0;
+			var affiche = "#bob";
+			var change =0;
 			clicView = Backbone.View.extend({
 				render: function(){
-					var template = _.template( $("#bob").html(), {});
+					var template = _.template( $(affiche).html(), {});
 					this.$el.html(template);
-				}
+				},
 				events: {
-					"click input[type=button]": "doplus";
-					"click input[type=button]": "dominus";
+					"click input[type=button][id='plus']": "doplus",
+					"click input[type=button][id='minus']": "dominus",
+					"click input[type=button][id='switch']": "doswitch"
 				},
 				doplus: function(event){
 					clics += 1;
-					clic_View.render();
-				}
+					value += 1;
+					this.render();
+				},
 				dominus: function(event){
-					clics-= 1;
-					clic_View.render();
+					clics += 1;
+					value -= 1;
+					this.render();
+				},
+				doswitch: function(event){
+					if (change == 0){
+						change =1;
+						affiche = "#pal";
+					}else{
+						change = 0;
+						affiche = "#bob";
+					}
+					this.render();
 				}
 			});
 			var clic_View = new clicView({ el: $("#clic")});
