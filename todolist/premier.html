@@ -19,8 +19,9 @@
 				description<br>
 				<textarea name="description" id="description" rows=4 cols=70></textarea><br>
 				<input type="button" id="ajout" value="enregistrer"/><br>
-				<input type="button" id="reset" value="reinitialiser"/>
+				<input type="button" id="reset" value="reinitialiser"/><br><br>
 			</form>
+			<output type="text" id="displaylist"><%= tasklist %></output>
 		</script>
 		<script>
 			var number = 1;
@@ -67,6 +68,7 @@
 					console.log("ajout du to do numéro " + number + "\n élément : " + titre + "; " + createur + "; " + description);
 					tasklist.add(Task, task);
 					number++;
+					this.render();
 				},
 				doreset: function(event){
 					console.log("remise à zero");
