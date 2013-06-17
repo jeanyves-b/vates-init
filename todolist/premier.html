@@ -1,0 +1,85 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title> to do list </title>
+		<script src="http://underscorejs.org/underscore-min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="http://backbonejs.org/backbone.js"></script>
+	</head>
+
+	<body>
+		<div id="affichage">
+		</div>
+		<script type="text/template" id="formulaire">
+			<form name="todoux">
+				titre de la tache<br/>
+				<input type="text" name="titre" id="title"/><br><br>
+				créateur de la tache<br>
+				<input type="text" name="createur" id="creator"/><br><br>
+				description<br>
+				<textarea name="description" id="description" rows=4 cols=70></textarea><br>
+				<input type="button" id="ajout" value="enregistrer"/><br>
+				<input type="button" id="reset" value="reinitialiser"/>
+			</form>
+		</script>
+		<script>
+			var number = 1;
+			
+			var Task = Backbone.Model.extend({
+				defaults: {
+					id : 0,
+					title : "",
+					creator : "",
+					task : "",
+					datecreation : "",
+					datemodif : "",
+					tags : [],
+					dependance : []
+				},
+				initialize: function() {
+					date = new Date();
+					id = number;
+					datecreation = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+					datemodif = date;
+					
+					this.on("change", function(model){
+						date = new Date();
+						datemodif = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+						console.log(datemodif);
+					});
+				}
+			});
+			
+			formul = Backbone.View.extend({
+				render: function(){
+					var template = _.template( $("#formulaire").html(), {});
+					this.$el.html(template);
+				},
+				events: {
+					"click #ajout": "doajout",
+					"click #reset": "doreset",
+				},
+				doajout: function(event){
+					var titre = document.forms["todoux"].elements["titre"],
+						createur = document.forms["todoux"].elements["creator"],
+						description = document.forms["todoux"].elements["description"],
+						task = new Task({ title : titre, creator : createur, task : description});
+					console.log("ajout du to do numéro " + number + "\n élément : " + titre + "; " + createur + "; " + description);
+					tasklist.add(Task, task);
+					number++;
+				},
+				doreset: function(event){
+					console.log("remise à zero");
+				}
+			});
+			
+			var TaskList = Backbone.Collection.extend({
+				model: Task
+			});
+			
+			var tasklist = new TaskList;
+			var view = new formul({ el: $("#affichage")});
+			view.render();
+		</script>
+	</body>
+</html>
