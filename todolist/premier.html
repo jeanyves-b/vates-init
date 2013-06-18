@@ -8,20 +8,29 @@
 	</head>
 
 	<body>
-		<div id="affichage">
-		</div>
-		<script type="text/template" id="formulaire">
+		<div id="affichageformulaire"></div>
+		<script type="text/template" id="formulaire"><br/>
 			<form name="todoux">
-				titre de la tache<br/>
+				titre de la tache<br>
 				<input type="text" name="titre" id="title"/><br><br>
 				créateur de la tache<br>
 				<input type="text" name="createur" id="creator"/><br><br>
 				description<br>
 				<textarea name="description" id="description" rows=4 cols=70></textarea><br>
-				<input type="button" id="ajout" value="enregistrer"/><br>
+				<input type="button" id="ajout" value="enregistrer"/>
 				<input type="button" id="reset" value="reinitialiser"/><br><br>
 			</form>
-			<output type="text" id="displaylist"><%= tasklist %></output>
+			<span><%= number %></span>
+		</script>
+		<div id="listdisplayer"></div>
+		<p>tache enregistrée<br></p>
+		<script type="text/template" id="tasktemplate"><br/>
+			<!--<span><%= id %></span>
+			<span><%= title %></span>
+			<span><%= creator %></span>
+			<span><%= datecreation %></span>
+			<span><%= tags %></span>
+			<span><%= task %></span>-->
 		</script>
 		<script>
 			var number = 1;
@@ -52,9 +61,12 @@
 			});
 			
 			formul = Backbone.View.extend({
+				el: $("#affichageformulaire"),
+				initialize: function(){
+					this.template = _.template( $("#formulaire").html(), {});
+				},
 				render: function(){
-					var template = _.template( $("#formulaire").html(), {});
-					this.$el.html(template);
+					this.$el.html(this.template);
 				},
 				events: {
 					"click #ajout": "doajout",
@@ -65,9 +77,9 @@
 						createur = document.forms["todoux"].elements["creator"],
 						description = document.forms["todoux"].elements["description"],
 						task = new Task({ title : titre, creator : createur, task : description});
-					console.log("ajout du to do numéro " + number + "\n élément : " + titre + "; " + createur + "; " + description);
 					tasklist.add(Task, task);
-					number++;
+					number += 1;
+					this.doreset();
 					this.render();
 				},
 				doreset: function(event){
@@ -79,8 +91,27 @@
 				model: Task
 			});
 			
+			DisplayList = Backbone.View.extend({
+				el: $("#listdisplayer"),
+				initialize: function(){
+					this.template = _.template($("#tasktemplate").html(), {});
+					_.bindAll(this, "Task");
+					this.setModel(Task);
+					this.model.bind("change", this.render);
+				},
+				setModel: function(model){
+					this.model = model;
+				},
+				render: function(){
+					var rendercontent = this.template(this.model.toJSON());
+					this.$el.html(template);
+					return this;
+				}
+			});
+			
 			var tasklist = new TaskList;
-			var view = new formul({ el: $("#affichage")});
+			var displist = new DisplayList;
+			var view = new formul;
 			view.render();
 		</script>
 	</body>
