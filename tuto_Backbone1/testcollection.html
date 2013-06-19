@@ -1,0 +1,41 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title> test collection </title>
+		<script src="http://underscorejs.org/underscore.js"></script>
+		<script src="http://backbonejs.org/backbone.js"></script>
+	</head>
+
+	<body>
+		<script>
+			var Ship = Backbone.Model.extend({
+				defaults : {
+					nom : "",
+					taille : 0
+				}
+			});
+			
+			var Ships = Backbone.Collection.extend({
+				model : Ship,
+				initialize : function(){
+					this.on("add", function(ship){
+						console.log("new ship : " + ship.get("nom"));
+					});
+				}
+			});
+			
+			var ships = new Ships;
+			
+			ships.add([
+				{nom : "flying dutchman", taille : 4},
+				{nom : "black pearl", taille : 2}
+			]);
+			ships.add([
+				{nom : "dutchman", taille : 4},
+				{nom : "black pearl", taille : 2}
+			]);
+			
+			console.log(ships.length);
+		</script>
+	</body>
+</html>
