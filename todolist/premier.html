@@ -2,49 +2,60 @@
 	<head>
 		<meta charset="utf-8" />
 		<title> to do list </title>
-		<script src="http://underscorejs.org/underscore-min.js"></script>
+		<script src="http://underscorejs.org/underscore.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="http://backbonejs.org/backbone.js"></script>
 	</head>
 
 	<body>
+<!---------------------------------------------------------------------------------------->
 		<div id="affichageformulaire"></div>
 		<script type="text/template" id="formulaire"><br/>
 			<form name="todoux">
 				titre de la tache<br>
-				<input type="text" name="titre" id="title"/><br><br>
+				<input type="text" name="title" id="title"/><br><br>
 				créateur de la tache<br>
-				<input type="text" name="createur" id="creator"/><br><br>
+				<input type="text" name="creator" id="creator"/><br><br>
 				description<br>
 				<textarea name="description" id="description" rows=4 cols=70></textarea><br>
 				<input type="button" id="ajout" value="enregistrer"/>
 				<input type="button" id="reset" value="reinitialiser"/><br><br>
 			</form>
-			<span><%= number %></span>
+			<span>nb de taches enregistrees : <%= number %></span>
 		</script>
-		<div id="listdisplayer"></div>
 		<p>tache enregistrée<br></p>
+<!---------------------------------------------------------------------------------------->
+		<div id="taskdisplayer"></div>
 		<script type="text/template" id="tasktemplate"><br/>
-			<!--<span><%= id %></span>
+			<span><%= id %></span>
 			<span><%= title %></span>
 			<span><%= creator %></span>
 			<span><%= datecreation %></span>
 			<span><%= tags %></span>
-			<span><%= task %></span>-->
+			<span><%= message %></span>
+		</script>
+<!---------------------------------------------------------------------------------------->
+		<div id="listdiplayer"></div>
+		<script type="text/template" id="listtemplate"><br/>
+			<ol>
+				<% tasklist.forEach(function(task){ %>
+					<li><%= task.get("id")%> : <%= task.get("title")%></li>
+				<% }); %>
+			</ol>
 		</script>
 		<script>
-			var number = 1;
-			
+			var number = 0;
+/*----------------------------------------------------------------------------------------*/			
 			var Task = Backbone.Model.extend({
 				defaults: {
 					id : 0,
 					title : "",
 					creator : "",
-					task : "",
+					messages : "",
 					datecreation : "",
 					datemodif : "",
 					tags : [],
-					dependance : []
+					dependancies : []
 				},
 				initialize: function() {
 					date = new Date();
@@ -59,58 +70,80 @@
 					});
 				}
 			});
-			
-			formul = Backbone.View.extend({
+/*----------------------------------------------------------------------------------------*/
+			var formul = Backbone.View.extend({
 				el: $("#affichageformulaire"),
 				initialize: function(){
-					this.template = _.template( $("#formulaire").html(), {});
+					this.template = _.template($("#formulaire").html());
 				},
 				render: function(){
-					this.$el.html(this.template);
+					number = tasklist.length;
+					$(this.el).html(this.template());
 				},
 				events: {
 					"click #ajout": "doajout",
 					"click #reset": "doreset",
 				},
 				doajout: function(event){
-					var titre = document.forms["todoux"].elements["titre"],
-						createur = document.forms["todoux"].elements["creator"],
-						description = document.forms["todoux"].elements["description"],
-						task = new Task({ title : titre, creator : createur, task : description});
-					tasklist.add(Task, task);
-					number += 1;
-					this.doreset();
+					var titre = document.getElementById("title").value,
+						createur = document.getElementById("creator").value,
+						description = document.getElementById("description").value;
+					tasklist.add([
+						{title : titre, creator : createur, messages : description}
+					]);
 					this.render();
+					console.log("titre : " + titre);
 				},
 				doreset: function(event){
-					console.log("remise à zero");
+					this.render();
 				}
 			});
-			
+/*----------------------------------------------------------------------------------------*/
 			var TaskList = Backbone.Collection.extend({
-				model: Task
+				model: Task,
+				initialize : function(){
+					this.on("add", function(task){
+						console.log("new task : " + task.get("title"));
+					});
+				}
 			});
-			
-			DisplayList = Backbone.View.extend({
-				el: $("#listdisplayer"),
+/*----------------------------------------------------------------------------------------*/
+			var DisplayTask = Backbone.View.extend({
+				el: $("#taskdisplayer"),
 				initialize: function(){
-					this.template = _.template($("#tasktemplate").html(), {});
-					_.bindAll(this, "Task");
+					this.template = _.template($("#tasktemplate").html());
 					this.setModel(Task);
+					_.bindAll(this, "render");
 					this.model.bind("change", this.render);
 				},
 				setModel: function(model){
 					this.model = model;
+					return this;
 				},
 				render: function(){
 					var rendercontent = this.template(this.model.toJSON());
-					this.$el.html(template);
+					$(this.el).html(rendercontent);
 					return this;
 				}
 			});
-			
+/*----------------------------------------------------------------------------------------*/
+			var DisplayList = Backbone.View.extend({
+				el: $("#listdisplayer"),
+				initialize: function(){
+					this.template = _.template($("#listtemplate").html());
+					//_.bindAll(this, "render");
+					this.collection.on("change",this.render);
+				},
+				render: function(){
+					this.template = _.template($("#listtemplate").html());
+					var renderedcontent = this.template(this.collection.toJSON());
+					$(this.el).html(renderedcontent);
+					return this;
+				},
+			});
+/*----------------------------------------------------------------------------------------*/
 			var tasklist = new TaskList;
-			var displist = new DisplayList;
+			var displist = new DisplayList({collection : tasklist});
 			var view = new formul;
 			view.render();
 		</script>
