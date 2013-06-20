@@ -8,7 +8,7 @@
 	</head>
 
 	<body>
-<!---------------------------------------------------------------------------------------->
+<!----------------------------------------------------------------------------------------->
 		<div id="affichageformulaire"></div>
 		<script type="text/template" id="formulaire"><br/>
 			<form name="todoux">
@@ -21,131 +21,124 @@
 				<input type="button" id="ajout" value="enregistrer"/>
 				<input type="button" id="reset" value="reinitialiser"/><br><br>
 			</form>
-			<span>nb de taches enregistrees : <%= number %></span>
+			<span>nb de taches enregistrees : <%= tasklist.length %></span>
 		</script>
-		<p>tache enregistrée<br></p>
-<!---------------------------------------------------------------------------------------->
-		<div id="taskdisplayer"></div>
-		<script type="text/template" id="tasktemplate"><br/>
-			<span><%= id %></span>
-			<span><%= title %></span>
-			<span><%= creator %></span>
-			<span><%= datecreation %></span>
-			<span><%= tags %></span>
-			<span><%= message %></span>
-		</script>
-<!---------------------------------------------------------------------------------------->
-		<div id="listdiplayer"></div>
-		<script type="text/template" id="listtemplate"><br/>
+		<p>tache enregistrée</p>
+<!----------------------------------------------------------------------------------------->
+		<div id="listdisplayer"></div>
+		<script type="text/template" id="listtemplate">
 			<ol>
 				<% tasklist.forEach(function(task){ %>
-					<li><%= task.get("id")%> : <%= task.get("title")%></li>
+					<li>titre : <%= task.get("title") %><br> 
+					créateur : <%= task.get("creator")%><br>	
+					tache : <%= task.get("messages") %><br>
+				<input type="button" id="erase" data-id="<%= task.get('id')%>" value="erase"/>
+				<input type="button" id="modify" data-id="<%=task.get('id')%>" value="modify"/></li>
 				<% }); %>
 			</ol>
 		</script>
+<!----------------------------------------------------------------------------------------->
 		<script>
-			var number = 0;
 /*----------------------------------------------------------------------------------------*/			
-			var Task = Backbone.Model.extend({
-				defaults: {
-					id : 0,
-					title : "",
-					creator : "",
-					messages : "",
-					datecreation : "",
-					datemodif : "",
-					tags : [],
-					dependancies : []
-				},
-				initialize: function() {
-					date = new Date();
-					id = number;
-					datecreation = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
-					datemodif = date;
-					
-					this.on("change", function(model){
+				var Task = Backbone.Model.extend({
+					defaults: {
+						title : "",
+						creator : "",
+						messages : "",
+						datecreation : "",
+						datemodif : "",
+						tags : [],
+						dependancies : []
+					},
+					initialize: function() {
 						date = new Date();
-						datemodif = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
-						console.log(datemodif);
-					});
-				}
-			});
+						var id;
+						if (tasklist.length == 0)
+							this.set("id", 0);
+						else
+							this.set("id", tasklist.get(tasklist.length-1).get("id") +1);
+						this.set("datecreation", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
+						this.set("datemodif", date);
+					
+						this.on("change", function(model){
+							date = new Date();
+							datemodif = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+						});
+					}
+				});
 /*----------------------------------------------------------------------------------------*/
-			var formul = Backbone.View.extend({
-				el: $("#affichageformulaire"),
-				initialize: function(){
-					this.template = _.template($("#formulaire").html());
-				},
-				render: function(){
-					number = tasklist.length;
-					$(this.el).html(this.template());
-				},
-				events: {
-					"click #ajout": "doajout",
-					"click #reset": "doreset",
-				},
-				doajout: function(event){
-					var titre = document.getElementById("title").value,
-						createur = document.getElementById("creator").value,
-						description = document.getElementById("description").value;
-					tasklist.add([
-						{title : titre, creator : createur, messages : description}
-					]);
-					this.render();
-					console.log("titre : " + titre);
-				},
-				doreset: function(event){
-					this.render();
-				}
-			});
+				var formul = Backbone.View.extend({
+					el: $("#affichageformulaire"),
+					initialize: function(){
+						this.template = _.template($("#formulaire").html());
+					},
+					render: function(){
+						$(this.el).html(this.template(tasklist));
+					},
+					events: {
+						"click #ajout": "doajout",
+						"click #reset": "doreset"
+					},
+					doajout: function(event){
+						var titre = $("#title").val(),
+							createur = $("#creator").val(),
+							description = $("#description").val();
+						tasklist.add([
+							{title : titre, creator : createur, messages : description}
+						]);
+						this.render();
+					},
+					doreset: function(event){
+						this.render();
+					}
+				});
 /*----------------------------------------------------------------------------------------*/
-			var TaskList = Backbone.Collection.extend({
-				model: Task,
-				initialize : function(){
-					this.on("add", function(task){
-						console.log("new task : " + task.get("title"));
-					});
-				}
-			});
+				var TaskList = Backbone.Collection.extend({
+					model: Task,
+					initialize : function(){
+						this.on("add", function(task){
+							console.log("new task : " + task.get("title"));
+						});
+						this.on("remove", function(task){
+							console.log("erase task : " + task.get("title"));
+						});
+						this.on("change", function(){
+						});
+					}
+				});
 /*----------------------------------------------------------------------------------------*/
-			var DisplayTask = Backbone.View.extend({
-				el: $("#taskdisplayer"),
-				initialize: function(){
-					this.template = _.template($("#tasktemplate").html());
-					this.setModel(Task);
-					_.bindAll(this, "render");
-					this.model.bind("change", this.render);
-				},
-				setModel: function(model){
-					this.model = model;
-					return this;
-				},
-				render: function(){
-					var rendercontent = this.template(this.model.toJSON());
-					$(this.el).html(rendercontent);
-					return this;
-				}
-			});
+				var DisplayList = Backbone.View.extend({
+					el: $("#listdisplayer"),
+					initialize: function(){
+						this.template = _.template($("#listtemplate").html());
+						var self = this;
+						this.collection.on("add", function () {
+							self.render(self.collection);
+						});
+						this.collection.on("remove", function () {
+							self.render(self.collection);
+						});
+					},
+					render: function(collection){
+						this.$el.html(this.template(tasklist));
+					},
+					events: {
+						"click #erase": "doerase",
+						"click #modify": "domodify"
+					},
+					doerase : function(event){
+						console.log($(event.currentTarget).data("id"));
+						tasklist.remove($(event.currentTarget).data("id"));
+					},
+					domodify : function(event){
+						console.log(event);
+					}
+				});
 /*----------------------------------------------------------------------------------------*/
-			var DisplayList = Backbone.View.extend({
-				el: $("#listdisplayer"),
-				initialize: function(){
-					this.template = _.template($("#listtemplate").html());
-					//_.bindAll(this, "render");
-					this.collection.on("change",this.render);
-				},
-				render: function(){
-					this.template = _.template($("#listtemplate").html());
-					var renderedcontent = this.template(this.collection.toJSON());
-					$(this.el).html(renderedcontent);
-					return this;
-				},
-			});
-/*----------------------------------------------------------------------------------------*/
-			var tasklist = new TaskList;
-			var displist = new DisplayList({collection : tasklist});
-			var view = new formul;
-			view.render();
+				var tasklist = new TaskList;
+				var displist = new DisplayList({collection : tasklist});
+				var view = new formul;
+				view.render();
 		</script>
 	</body>
 </html>
