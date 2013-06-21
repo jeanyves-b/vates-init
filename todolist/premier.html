@@ -6,7 +6,6 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="http://backbonejs.org/backbone.js"></script>
 	</head>
-
 	<body>
 <!----------------------------------------------------------------------------------------->
 		<div id="affichageformulaire"></div>
@@ -27,14 +26,14 @@
 		<script type="text/template" id="listtemplate">
 			<ol>
 				<% tasklist.forEach(function(task){ %>
-					<li>titre : <a href="#task/<%=task.get('id')%>"><%= task.get("title") %></a>  
+					<li>titre : <a href="#task/<%=task.get('id')%>"><%= task.get("title") %></a></li>
 				<% }); %>
 			</ol>
 		</script>
 <!----------------------------------------------------------------------------------------->
 		<div id="taskdisplayer"></div>
-		<script type="text/template" id="tasktemplate"><br/>
-			<p>
+		<script type="text/template" id="tasktemplate">
+			<br/><p>
 				titre :<br>
 				<%= task.get("title") %><br><br>
 				créateur :<br>
@@ -47,6 +46,7 @@
 		</script>
 <!----------------------------------------------------------------------------------------->
 		<script>
+			//(function(){
 				var task_id = 0;
 				var modify = false;
 				var modify_id;
@@ -66,10 +66,10 @@
 						this.set("id", task_id++);
 						this.set("datecreation", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
 						this.set("datemodif", date);
-					
+						var self = this;
 						this.on("change", function(model){
 							date = new Date();
-							datemodif = date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+							self.set("datemodif", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
 						});
 					}
 				});
@@ -87,16 +87,13 @@
 						"click #reset": "doreset"
 					},
 					doajout: function(event){
-						var titre = $("#title").val(),
-							createur = $("#creator").val(),
-							description = $("#description").val();
 						if (modify){
 							tasklist.get(modify_id).set(
-								{title : titre, creator : createur, description : description});
+								{title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()});
 							modify = false;
 						}else{
 							tasklist.add([
-								{title : titre, creator : createur, description : description}
+								{title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()}
 							]);
 						}
 						this.render();
@@ -115,20 +112,17 @@
 					initialize: function(){
 						this.template = _.template($("#listtemplate").html());
 						var self = this;
-						this.collection.on("add", function (task) {
-							self.render(self.collection);
-							console.log("add task : " + task.get("title"));
+						this.collection.on("add", function (tasklist) {
+							self.render(tasklist);
 						});
 						this.collection.on("remove", function (task) {
 							self.render(self.collection);
-							console.log("erase task : " + task.get("title"));
 						});
 						this.collection.on("change", function (task) {
 							self.render(self.collection);
-							console.log("change task to : " + task.get("title"));
 						});
 					},
-					render: function(collection){
+					render: function(tasklist){
 						this.$el.html(this.template(tasklist));
 					}
 				});
@@ -140,30 +134,26 @@
 					},
 					root : function(){
 						view.render();
-						console.log("home sweat home");
 					},
 					task : function(id){
 						var taskinette = tasklist.get(id);
 						taskinette.on("change", function(taskinette){
 							taskdisplayer.render(taskinette);
 						}),
-						taskinette.on("remove", function(taskinette){
+						taskinette.on("remove", function(){
 							taskdisplayer.$el.html("");
-							route = "";
 						}),
 						taskdisplayer.render(taskinette);
-						console.log("task");
 					}
 				});
 /*----------------------------------------------------------------------------------------*/
 				var TaskDisplayer = Backbone.View.extend({
 					el: $("#taskdisplayer"),
 					initialize : function(){
-						this.template = _.template($("#tasktemplate").html());
+						this.template = _.template($("#tasktemplate").html(), {"tasklist" : tasklist});
 					},
 					render : function(task){
 						this.$el.html(this.template({"task" : task}));
-						console.log("render");
 					},
 					events: {
 						"click #erase": "doerase",
@@ -171,6 +161,7 @@
 					},
 					doerase : function(event){
 						tasklist.remove($(event.currentTarget).data("id"));
+						router.navigate("");
 					},
 					domodify : function(event){
 						modify = true;
@@ -181,13 +172,15 @@
 					}
 				});
 /*----------------------------------------------------------------------------------------*/
+				console.log("empty");
+				var view = new formul;
 				var tasklist = new TaskList;
 				var displist = new DisplayList({collection : tasklist});
-				var view = new formul;
-				var taskdisplayer = new TaskDisplayer;
 				var router = new ListRouter;
-				Backbone.history.start();
+				var taskdisplayer = new TaskDisplayer;
 				view.render();
+				Backbone.history.start();
+			//})();
 		</script>
 	</body>
 </html>
