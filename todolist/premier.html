@@ -1,186 +1,171 @@
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<title> to do list </title>
-		<script src="http://underscorejs.org/underscore.js"></script>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-		<script src="http://backbonejs.org/backbone.js"></script>
-	</head>
-	<body>
-<!----------------------------------------------------------------------------------------->
-		<div id="affichageformulaire"></div>
-		<script type="text/template" id="formulaire"><br/>
-			<form name="todoux">
-				titre de la tache<br>
-				<input type="text" name="title" id="title"/><br><br>
-				créateur de la tache<br>
-				<input type="text" name="creator" id="creator"/><br><br>
-				description<br>
-				<textarea name="description" id="description" rows=4 cols=70></textarea><br>
-				<input type="button" id="ajout" value="enregistrer"/>
-				<input type="button" id="reset" value="reinitialiser"/><br><br>
-			</form>
-		</script>
-<!----------------------------------------------------------------------------------------->
-		<div id="listdisplayer"></div>
-		<script type="text/template" id="listtemplate">
-			<ol>
-				<% tasklist.forEach(function(task){ %>
-					<li>titre : <a href="#task/<%=task.get('id')%>"><%= task.get("title") %></a></li>
-				<% }); %>
-			</ol>
-		</script>
-<!----------------------------------------------------------------------------------------->
-		<div id="taskdisplayer"></div>
-		<script type="text/template" id="tasktemplate">
-			<br/><p>
-				titre :<br>
-				<%= task.get("title") %><br><br>
-				créateur :<br>
-				<%= task.get("creator") %><br><br>
-				description :<br>
-				<%= task.get("description") %><br><br>
-				<input type="button" id="erase" data-id="<%= task.get('id')%>" value="erase"/>
-				<input type="button" id="modify" data-id="<%=task.get('id')%>" value="modify"/>
-			</p>
-		</script>
-<!----------------------------------------------------------------------------------------->
-		<script>
-			//(function(){
-				var task_id = 0;
-				var modify = false;
-				var modify_id;
-/*----------------------------------------------------------------------------------------*/			
-				var Task = Backbone.Model.extend({
-					defaults: {
-						title : "",
-						creator : "",
-						description : "",
-						datecreation : "",
-						datemodif : "",
-						tags : [],
-						dependancies : []
-					},
-					initialize: function() {
-						date = new Date();
-						this.set("id", task_id++);
-						this.set("datecreation", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
-						this.set("datemodif", date);
-						var self = this;
-						this.on("change", function(model){
-							date = new Date();
-							self.set("datemodif", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
-						});
-					}
-				});
-/*----------------------------------------------------------------------------------------*/
-				var formul = Backbone.View.extend({
-					el: $("#affichageformulaire"),
-					initialize: function(){
-						this.template = _.template($("#formulaire").html());
-					},
-					render: function(){
-						$(this.el).html(this.template(tasklist));
-					},
-					events: {
-						"click #ajout": "doajout",
-						"click #reset": "doreset"
-					},
-					doajout: function(event){
-						if (modify){
-							tasklist.get(modify_id).set(
-								{title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()});
-							modify = false;
-						}else{
-							tasklist.add([
-								{title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()}
-							]);
-						}
-						this.render();
-					},
-					doreset: function(event){
-						this.render();
-					}
-				});
-/*----------------------------------------------------------------------------------------*/
-				var TaskList = Backbone.Collection.extend({
-					model: Task
-				});
-/*----------------------------------------------------------------------------------------*/
-				var DisplayList = Backbone.View.extend({
-					el: $("#listdisplayer"),
-					initialize: function(){
-						this.template = _.template($("#listtemplate").html());
-						var self = this;
-						this.collection.on("add", function (tasklist) {
-							self.render(tasklist);
-						});
-						this.collection.on("remove", function (task) {
-							self.render(self.collection);
-						});
-						this.collection.on("change", function (task) {
-							self.render(self.collection);
-						});
-					},
-					render: function(tasklist){
-						this.$el.html(this.template(tasklist));
-					}
-				});
-/*----------------------------------------------------------------------------------------*/
-				var ListRouter = Backbone.Router.extend({
-					routes : {
-						"" : "root",
-						"task/:id" : "task"
-					},
-					root : function(){
-						view.render();
-					},
-					task : function(id){
-						var taskinette = tasklist.get(id);
-						taskinette.on("change", function(taskinette){
-							taskdisplayer.render(taskinette);
-						}),
-						taskinette.on("remove", function(){
-							taskdisplayer.$el.html("");
-						}),
-						taskdisplayer.render(taskinette);
-					}
-				});
-/*----------------------------------------------------------------------------------------*/
-				var TaskDisplayer = Backbone.View.extend({
-					el: $("#taskdisplayer"),
-					initialize : function(){
-						this.template = _.template($("#tasktemplate").html(), {"tasklist" : tasklist});
-					},
-					render : function(task){
-						this.$el.html(this.template({"task" : task}));
-					},
-					events: {
-						"click #erase": "doerase",
-						"click #modify": "domodify"
-					},
-					doerase : function(event){
-						tasklist.remove($(event.currentTarget).data("id"));
-						router.navigate("");
-					},
-					domodify : function(event){
-						modify = true;
-						modify_id = tasklist.get($(event.currentTarget).data("id")).get("id");
-						$("#title").val(tasklist.get($(event.currentTarget).data("id")).get("title")),
-						$("#creator").val(tasklist.get($(event.currentTarget).data("id")).get("creator")),
-						$("#description").val(tasklist.get($(event.currentTarget).data("id")).get("description"));
-					}
-				});
-/*----------------------------------------------------------------------------------------*/
-				console.log("empty");
-				var view = new formul;
-				var tasklist = new TaskList;
-				var displist = new DisplayList({collection : tasklist});
-				var router = new ListRouter;
-				var taskdisplayer = new TaskDisplayer;
-				view.render();
-				Backbone.history.start();
-			//})();
-		</script>
-	</body>
+    <head>
+        <meta charset="utf-8" />
+        <title> to do list </title>
+        <script src="http://underscorejs.org/underscore.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script src="http://backbonejs.org/backbone.js"></script>
+    </head>
+    <body>
+<!--*****************************************************************************************************-->
+        <div id="affichageformulaire"></div>
+        <script type="text/template" id="formulaire"><br/>
+            <form name="todoux">
+                titre de la tache<br>
+                <input type="text" name="title" id="title"/><br><br>
+                créateur de la tache<br>
+                <input type="text" name="creator" id="creator"/><br><br>
+                description<br>
+                <textarea name="description" id="description" rows=4 cols=70></textarea><br>
+                <input type="button" id="ajout" value="enregistrer"/>
+                <input type="button" id="reset" value="reinitialiser"/><br><br>
+            </form>
+            <br>
+            <ol>
+                <% collection.forEach(function(task){ %>
+                    <li>titre : <a href="#task/<%=task.get('id')%>"><%= task.get("title") %></a></li>
+                <% }); %>
+            </ol>
+        </script>
+<!--*****************************************************************************************************-->
+        <div id="taskdisplayer"></div>
+        <script type="text/template" id="tasktemplate">
+            <br/><p>
+                titre :<br>
+                <%= task.get("title") %><br><br>
+                créateur :<br>
+                <%= task.get("creator") %><br><br>
+                description :<br>
+                <%= task.get("description") %><br><br>
+                <input type="button" id="erase" data-id="<%= task.get('id')%>" value="erase"/>
+                <input type="button" id="modify" data-id="<%=task.get('id')%>" value="modify"/>
+            </p>
+        </script>
+<!--*****************************************************************************************************-->
+        <script>
+            (function(){
+                var task_id = 0;
+                var modify = false;
+                var modify_id;
+/*--------------------------------------------------------------------------------------------------------*/
+                var Task = Backbone.Model.extend({
+                    defaults: {
+                        title : "",
+                        creator : "",
+                        description : "",
+                        datecreation : "",
+                        datemodif : "",
+                        tags : [],
+                        dependancies : []
+                    },
+                    initialize: function() {
+                        date = new Date();
+                        this.set("id", task_id++);
+                        this.set("datecreation", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
+                        this.set("datemodif", date);
+                        var self = this;
+                        this.on("change", function(model){
+                            date = new Date();
+                            self.set("datemodif", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
+                        });
+                    }
+                });
+/*-------------------------------------------------------------------------------------------------------*/
+                var TaskList = Backbone.Collection.extend({
+                    model: Task
+                });
+/*--------------------------------------------------------------------------------------------------------*/
+                var formul = Backbone.View.extend({
+                    el: $("#affichageformulaire"),
+                    collection : new TaskList,
+                    initialize: function(){
+                        this.template = _.template($("#formulaire").html());
+                        var self = this;
+                        this.collection.on("add", function () {
+                            self.render(self.collection);
+                        });
+                        this.collection.on("remove", function () {
+                            self.render(self.collection);
+                        });
+                        this.collection.on("change", function () {
+                            self.render(self.collection);
+                        });
+                    },
+                    render: function(){
+                        $(this.el).html(this.template(this));
+                    },
+                    events: {
+                        "click #ajout": "doajout",
+                        "click #reset": "doreset"
+                    },
+                    doajout: function(event){
+                        if (modify){
+                            this.collection.get(modify_id).set(
+                                {title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()});
+                            modify = false;
+                        }else{
+                            this.collection.add([
+                                {title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()}
+                            ]);
+                        }
+                        this.render();
+                    },
+                    doreset: function(event){
+                        this.render();
+                    }
+                });
+/*-------------------------------------------------------------------------------------------------------*/
+                var ListRouter = Backbone.Router.extend({
+                    routes : {
+                        "" : "root",
+                        "task/:id" : "task"
+                    },
+                    root : function(){
+                        view.render();
+                    },
+                    task : function(id){
+                        var taskinette = view.collection.get(id);
+                        taskinette.on("change", function(taskinette){
+                            taskdisplayer.render(taskinette);
+                        }),
+                        taskinette.on("remove", function(){
+                            taskdisplayer.$el.html("");
+                        }),
+                        taskdisplayer.render(taskinette);
+                    }
+                });
+/*-------------------------------------------------------------------------------------------------------*/
+                var TaskDisplayer = Backbone.View.extend({
+                    el: $("#taskdisplayer"),
+                    initialize : function(){
+                        this.template = _.template($("#tasktemplate").html(), {"task" : new Task});
+                    },
+                    render : function(task){
+                        this.$el.html(this.template({"task" : task}));
+                    },
+                    events: {
+                        "click #erase": "doerase",
+                        "click #modify": "domodify"
+                    },
+                    doerase : function(event){
+view.collection.remove($(event.currentTarget).data("id"));
+                        router.navigate("");
+                    },
+                    domodify : function(event){
+                        modify = true;
+                        modify_id = view.collection.get($(event.currentTarget).data("id")).get("id");
+$("#title").val(view.collection.get($(event.currentTarget).data("id")).get("title")),
+$("#creator").val(view.collection.get($(event.currentTarget).data("id")).get("creator")),
+$("#description").val(view.collection.get($(event.currentTarget).data("id")).get("description"));
+                    }
+                });
+/*-------------------------------------------------------------------------------------------------------*/
+                var view = new formul;
+                var taskdisplayer = new TaskDisplayer;
+                var router = new ListRouter;
+                view.render();
+                Backbone.history.start();
+            })();
+        </script>
+    </body>
 </html>
