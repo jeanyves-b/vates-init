@@ -71,28 +71,28 @@
 					}
 				});
 /*-------------------------------------------------------------------------------------------------------*/
-				var TaskList = Backbone.Collection.extend({
+				var TaskList = Backbone.Collection.extend({ // Tasks
 					model: Task
 				});
 /*--------------------------------------------------------------------------------------------------------*/
-				var formul = Backbone.View.extend({
+				var formul = Backbone.View.extend({ // EditView
 					el: $("#affichageformulaire"),
 					collection : new TaskList,
 					initialize : function(){
 						this.template = _.template($("#formulaire").html());
 						var self = this;
 						this.collection.on("add", function () {
-							self.render(self.collection);
+							self.render();
 						});
 						this.collection.on("remove", function () {
-							self.render(self.collection);
+							self.render();
 						});
 						this.collection.on("change", function () {
-							self.render(self.collection);
+							self.render();
 						});
 					},
 					render: function(){
-						$(this.el).html(this.template(this));
+						this.$el.html(this.template(this));
 					},
 					events: {
 						"click #ajout": "doajout",
@@ -116,13 +116,14 @@
 					}
 				});
 /*-------------------------------------------------------------------------------------------------------*/
-				var ListRouter = Backbone.Router.extend({
+				var ListRouter = Backbone.Router.extend({ // Router
 					routes : {
 						"" : "root",
 						"task/:id" : "task"
 					},
 					root : function(){
 						view.render();
+						$('#taskdisplayer').html('');
 					},
 					task : function(id){
 						var taskinette = view.collection.get(id);
@@ -136,13 +137,13 @@
 					}
 				});
 /*-------------------------------------------------------------------------------------------------------*/
-				var TaskDisplayer = Backbone.View.extend({
+				var TaskDisplayer = Backbone.View.extend({ // TaskView
 					el: $("#taskdisplayer"),
 					initialize : function(){
 						this.template = _.template($("#tasktemplate").html());
 					},
 					render : function(task){
-						$(this.el).html(this.template({"task" : task}));
+						this.$el.html(this.template({"task" : task}));
 					},
 					events : {
 						"click #erase": "doerase",
