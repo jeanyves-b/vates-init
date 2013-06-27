@@ -1,0 +1,167 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title> to do list </title>
+		<script src="http://underscorejs.org/underscore.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="http://backbonejs.org/backbone.js"></script>
+		<script src="http://marionettejs.com/downloads/backbone.marionette.js"></script>
+	</head>
+	<body>
+<!--*****************************************************************************************************-->
+		<div id="displayer"></div>
+<!--*****************************************************************************************************-->
+		<script type="text/template" id="formtemplate"><br/>
+			<form name="todoux">
+				titre de la tache<br>
+				<input type="text" name="title" id="title"/><br><br>
+				créateur de la tache<br>
+				<input type="text" name="creator" id="creator"/><br><br>
+				description<br>
+				<textarea name="description" id="description" rows=4 cols=70></textarea><br>
+				<input type="button" id="save" value="enregistrer"/>
+				<input type="button" id="reset" value="reinitialiser"/><br>
+				<input type="button" id="return" value="retour à la liste"/>
+			</form>
+		</script>
+<!--*****************************************************************************************************-->
+		<script type="text/template" id="globaltemplate">
+				<ul>
+				</ul>
+				<input type="button" id="new" value="nouveau"/>
+		</script>
+<!--*****************************************************************************************************-->
+		<script type="text/template" id="tasktemplate">
+			<div>
+				titre : <a href="#task/<%=task.get('id')%>"><%= task.get("title") %></a>
+			</div>
+		</script>
+		<script>
+			(function()
+			{
+				var task_id = 0;
+/*----------------------------------------------------------------------------------------------------------*/
+//model and collections
+/*----------------------------------------------------------------------------------------------------------*/
+				var Task = Backbone.Model.extend
+				({
+					defaults :
+					{
+						title : "",
+						creator : "",
+						description : "",
+						datecreation : "",
+						datemodif : "",
+						tags : [],
+						dependancies : []
+					},
+					initialize : function () 
+					{
+						date = new Date();
+						this.set("id", task_id);
+						this.set("datecreation", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
+						this.set("datemodif", date);
+						var self = this;
+						this.on("change", function(model){
+							date = new Date();
+							self.set("datemodif", date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
+						});
+					}
+				});
+/*----------------------------------------------------------------------------------------------------------*/
+				var Tasks = Backbone.Collection.extend
+				({
+					model : Task,
+					initialize : function ()
+					{
+						this.on("add", function ()
+						{
+							task_id = 0;
+							while (this.get(task_id))
+								{task_id ++;}
+						})
+					}
+				});
+/*----------------------------------------------------------------------------------------------------------*/
+//views
+/*----------------------------------------------------------------------------------------------------------*/
+				var FormView = Backbone.Marionette.ItemView.extend
+				({
+					model : Task,
+					template : "#formtemplate",
+					events: 
+					{
+						"click #save" : function(event)
+						{
+							this.task.set({title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()});
+						},
+						"click #reset" : function()
+						{
+							$("#title").val("");
+							$("#creator").val("");
+							$("#description").val("");
+						},
+						"click #return" : function ()
+						{
+							router.navigate("");
+						}
+					}
+				});
+/*----------------------------------------------------------------------------------------------------------*/
+				var TasksView = Backbone.Marionette.CompositeView.extend
+				({
+					model : Tasks,
+					itemView : FormView,
+					itemViewContainer : "ul",
+					template : "#globaltemplate",
+					events :
+					{
+						"click #new" : function(event)
+						{
+							var road = "#task/:" + task_id;
+							router.navigate(road);
+						}
+					}
+				})
+/*----------------------------------------------------------------------------------------------------------*/
+//router
+/*----------------------------------------------------------------------------------------------------------*/
+				var Router = Backbone.Router.extend
+				({
+					initialize : function ()
+					{
+						this.navigate("")
+					},
+					routes : 
+					{
+						"" : "root",
+						"task/:id" : "task"
+					},
+					root : function()
+					{
+						tasksview.render();
+					},
+					task : function(id)
+					{
+						if (this.collection.get(id))
+							formview.set({"task" : this.collection.get(id)});
+						else
+						{
+							var task = new Task;
+							formview.set({"task" : task});
+							this.collection.add(task);
+						}
+						formview.render();
+					}
+				});
+;/*----------------------------------------------------------------------------------------------------------*/
+				var taskcollection = new Tasks;
+				var router = new Router({collection : taskcollection});
+				var formview = new FormView;
+				var tasksview = new TasksView;
+
+				Backbone.history.start();
+			})();
+		</script>
+	</body>
+</html>
