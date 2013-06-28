@@ -102,6 +102,10 @@
 
 				app.main.show(new TaskFormView({'model': task}));
 			},
+			'*path': function (path) { // Default route.
+				alert('this page does not exist!');
+				this.navigate('', {'trigger': true});
+			}
 		}
 	});
 
