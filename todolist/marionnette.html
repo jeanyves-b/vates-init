@@ -51,9 +51,7 @@
 						creator : "",
 						description : "",
 						datecreation : "",
-						datemodif : "",
-						tags : [],
-						dependancies : []
+						datemodif : ""
 					},
 					initialize : function () 
 					{
@@ -87,13 +85,17 @@
 /*----------------------------------------------------------------------------------------------------------*/
 				var FormView = Backbone.Marionette.ItemView.extend
 				({
-					model : Task,
+					model : new Task,
 					template : "#formtemplate",
+					set : function(intask)
+					{
+						model = intask;
+					},
 					events: 
 					{
 						"click #save" : function(event)
 						{
-							this.task.set({title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()});
+							this.model.set({title : $("#title").val(), creator : $("#creator").val(), description : $("#description").val()});
 						},
 						"click #reset" : function()
 						{
@@ -108,17 +110,23 @@
 					}
 				});
 /*----------------------------------------------------------------------------------------------------------*/
+				var TaskView = Backbone.Marionette.ItemView.extend
+				({
+					model : Task,
+					template : "#tasktemplate"
+				})
+/*----------------------------------------------------------------------------------------------------------*/
 				var TasksView = Backbone.Marionette.CompositeView.extend
 				({
-					model : Tasks,
-					itemView : FormView,
+					model : new Backbone.Model,
+					itemView : TaskView,
 					itemViewContainer : "ul",
 					template : "#globaltemplate",
 					events :
 					{
 						"click #new" : function(event)
 						{
-							var road = "#task/:" + task_id;
+							var road = "#task/" + task_id;
 							router.navigate(road);
 						}
 					}
@@ -128,6 +136,7 @@
 /*----------------------------------------------------------------------------------------------------------*/
 				var Router = Backbone.Router.extend
 				({
+					collection : new Tasks,
 					initialize : function ()
 					{
 						this.navigate("")
@@ -139,26 +148,31 @@
 					},
 					root : function()
 					{
-						tasksview.render();
+						app.main.show(tasksview);
 					},
 					task : function(id)
 					{
-						if (this.collection.get(id))
-							formview.set({"task" : this.collection.get(id)});
+						if (_.contains(this.collection, id))
+							formview.set(this.collection.get(id));
 						else
 						{
 							var task = new Task;
-							formview.set({"task" : task});
+							formview.set(task);
 							this.collection.add(task);
 						}
-						formview.render();
+						app.main.show(formview);
 					}
 				});
-;/*----------------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------------------------------*/
+//application
+/*----------------------------------------------------------------------------------------------------------*/
+				var app = new Backbone.Marionette.Application();
+				app.addRegions({'main' : "#displayer"});
+/*----------------------------------------------------------------------------------------------------------*/
 				var taskcollection = new Tasks;
-				var router = new Router({collection : taskcollection});
 				var formview = new FormView;
-				var tasksview = new TasksView;
+				var tasksview = new TasksView({collection : taskcollection});
+				var router = new Router({collection : taskcollection});
 
 				Backbone.history.start();
 			})();

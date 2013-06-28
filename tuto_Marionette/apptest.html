@@ -1,0 +1,91 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title> testapp </title>
+		<script src="http://underscorejs.org/underscore.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="http://backbonejs.org/backbone.js"></script>
+		<script src="http://marionettejs.com/downloads/backbone.marionette.js"></script>
+	</head>
+	<body>
+<!--*****************************************************************************************************-->
+		<div id="displayer">
+		tout s'affiche ici
+		</div>
+<!--*****************************************************************************************************-->
+		<script type="text/template" id="shiptpl">
+			<div><%= ship.get("name")> : <ship.get("size")></div>
+		</script>
+<!--*****************************************************************************************************-->
+		<script>
+			(function()
+			{
+				//model and collection
+				//ship model
+				var Ship = Backbone.Model.extend
+				({
+					defaults :
+					{
+						name : "",
+						size : 0
+					}
+				});
+				//ship collection
+				var Ships = Backbone.Collection.extend
+				({
+					model : Ship,
+					initialize : function()
+					{
+						this.on("add", function(ship){
+							console.log("new ship : " + ship.get("nom"));
+						});
+					}
+				});
+
+				//views
+				//item view
+				var ShipView = Backbone.Marionette.ItemView.extend
+				({
+					model : Ship,
+					template : "#shiptpl",
+				});
+				//collection view
+				var ShipsView = Backbone.Marionette.CollectionView.extend
+				({
+					model : Ships,
+					itemView : ShipView
+				});
+
+				//application
+				var app = new Backbone.Marionette.Application({
+					initialize : function()
+					{
+						app.main.show(view);
+					}
+				});
+				app.addRegions(
+					{
+						main : "#displayer"
+					});
+				app.on("show:before", function(){console.log("show")});
+				app.on("initialize:before", function(){console.log("init")});
+
+				//use
+				var ships = new Ships;
+				var view = new ShipsView;
+
+				ships.add([
+					{nom : "flying dutchman", taille : 4},
+					{nom : "black pearl", taille : 2}
+				]);
+				ships.add([
+					{nom : "dutchman", taille : 4},
+					{nom : "black pearl", taille : 2}
+				]);
+
+				app.start();
+				app.main.show(view);
+			})();
+		</script>
+	</body>
+</html>
