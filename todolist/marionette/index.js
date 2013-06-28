@@ -32,12 +32,8 @@
 
 			this.on('change', function () {
 				this.set(
-					{
-						'mtime': Date.now(),
-					},
-					{
-						'silent': true,
-					}
+					{'mtime': Date.now()},
+					{'silent': true}
 				);
 			});
 		},
@@ -63,20 +59,23 @@
 
 	var TaskFormView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-form',
+		'tagName': 'form',
 
 		'events': {
-			'submit form' : function(event)
+			'submit' : function(event)
 			{
+				event.preventDefault();
+
 				var attributes = {};
-				_.each(this.$el.find('form').serializeArray(), function (entry) {
+				_.each(this.$el.find(':input').serializeArray(), function (entry) {
 					attributes[entry.name] = entry.value;
 				});
-
 				this.model.set(attributes);
+
 				tasks.add(this.model);
 
-				event.preventDefault();
-				router.navigate('', {trigger: true});
+				// Return to the tasks list.
+				router.navigate('', {'trigger': true});
 			},
 		}
 	});
@@ -93,6 +92,13 @@
 				var task = ('new' === id)
 					? new Task()
 					: tasks.get(id);
+
+				if (!task)
+				{
+					alert('no such task!');
+					this.navigate('', {'trigger': true});
+					return;
+				}
 
 				app.main.show(new TaskFormView({'model': task}));
 			},

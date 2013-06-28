@@ -26,17 +26,15 @@
 
 	<!-- Form for task edition/creation. @todo Removes as many id as possible. -->
 	<script type="text/template" id="tpl-task-form">
-		<form>
-			titre de la tache<br>
-			<input type="text" name="title" value="<%= title %>" /><br><br>
-			créateur de la tache<br>
-			<input type="text" name="creator" value="<%= creator %>" /><br><br>
-			description<br>
-			<textarea name="description" rows="4" cols="70"><%= description %></textarea><br>
-			<input type="submit" value="enregistrer" />
-			<input type="reset" value="reinitialiser" /><br>
-			<a href="#"><button type="button">Retour à la liste</button></a>
-		</form>
+		titre de la tache<br>
+		<input type="text" name="title" value="<%= title %>" /><br><br>
+		créateur de la tache<br>
+		<input type="text" name="creator" value="<%= creator %>" /><br><br>
+		description<br>
+		<textarea name="description" rows="4" cols="70"><%= description %></textarea><br>
+		<input type="submit" value="enregistrer" />
+		<input type="reset" value="reinitialiser" /><br>
+		<a href="#"><button type="button">Retour à la liste</button></a>
 	</script>
 </body>
 </html>
