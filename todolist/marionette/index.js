@@ -48,6 +48,12 @@
 	var TaskItemView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-item',
 		'tagName': 'li',
+		'events': {
+			'click' : function()
+			{
+				tasks.remove(this.model);
+			},
+		}
 	});
 
 	var TasksListView = Backbone.Marionette.CompositeView.extend({
@@ -60,7 +66,7 @@
 	var TaskFormView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-form',
 		'tagName': 'form',
-
+		
 		'events': {
 			'submit' : function(event)
 			{

@@ -22,11 +22,12 @@
 	<!-- Template for each task in the tasks list. -->
 	<script type="text/template" id="tpl-task-item">
 		<a href="#task/<%= id %>"><%= title %></a>
+		<button type="button">delete</button>
 	</script>
 
 	<!-- Form for task edition/creation. @todo Removes as many id as possible. -->
 	<script type="text/template" id="tpl-task-form">
-		titre de la tache<br>
+		titre de la tache<br/>
 		<input type="text" name="title" value="<%= title %>" /><br><br>
 		créateur de la tache<br>
 		<input type="text" name="creator" value="<%= creator %>" /><br><br>
