@@ -49,7 +49,7 @@
 		'template': '#tpl-task-item',
 		'tagName': 'li',
 		'events': {
-			'click #delete' : function() //@todo click sur le boutton delete uniquement
+			'click .delete-task' : function() //@todo click sur le boutton delete uniquement
 			{
 				tasks.remove(this.model);
 			},
@@ -90,7 +90,7 @@
 			},
 		}
 	});
-	
+
 	var TaskFullView = Backbone.Marionette.ItemView.extend({
 		'template' : '#tpl-task-full',
 		'tagname' : 'p'
@@ -103,11 +103,11 @@
 			'': function () {
 				app.main.show(tasks_list_view);
 			},
-			'modify/:id': function (id) {
-				// @todo Creates a task only when the form is saved.
-				var task = ('new' === id)
-					? new Task()
-					: tasks.get(id);
+			'task/new': function () {
+				app.main.show(new TaskFormView({'model': new Task()}));
+			},
+			'task/:id/edit': function (id) {
+				var task = tasks.get(id);
 
 				if (!task)
 				{
@@ -119,7 +119,16 @@
 				app.main.show(new TaskFormView({'model': task}));
 			},
 			'task/:id' : function (id) {
-				app.main.show(new TaskFullView({'model' : tasks.get(id)}));
+				var task = tasks.get(id);
+
+				if (!task)
+				{
+					alert('no such task!');
+					this.navigate('', {'trigger': true});
+					return;
+				}
+
+				app.main.show(new TaskFullView({'model': task}));
 			},
 			'*path': function (path) { // Default route.
 				alert('this page does not exist!');
@@ -147,5 +156,9 @@
 	});
 
 	// @todo:
+	// - Afficher correctement les dates.
+	// - Pouvoir cocher les cases dans la vue liste pour les marquer comme faites.
+	// - Gérer les tags/dépendances.
+	//
 	// - Ne créer une tâche qu'après avoir cliqué sur « enregister ».
 }();
