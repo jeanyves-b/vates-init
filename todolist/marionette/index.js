@@ -15,7 +15,7 @@
 			'creator': '',
 			'description': '',
 			'done': false,
-			
+
 			// Unix timestamp.
 			'ctime': 0,
 			'mtime': 0,
@@ -89,7 +89,7 @@
 				event.preventDefault();
 
 				var attributes = {};
-				_.each(this.$el.find(':input').serializeArray(), function (entry) {
+				_.each(this.$(':input').serializeArray(), function (entry) {
 					attributes[entry.name] = entry.value;
 				});
 				this.model.set(attributes);
