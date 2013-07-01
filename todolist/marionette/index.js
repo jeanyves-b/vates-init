@@ -14,7 +14,8 @@
 			'title': '',
 			'creator': '',
 			'description': '',
-
+			'done': false,
+			
 			// Unix timestamp.
 			'ctime': 0,
 			'mtime': 0,
@@ -48,10 +49,20 @@
 	var TaskItemView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-item',
 		'tagName': 'li',
+		'initialize' : function(){
+			var self = this;
+			this.model.on('change', function(){
+				self.render();
+			});
+		},
 		'events': {
-			'click .delete-task' : function() //@todo click sur le boutton delete uniquement
+			'click .delete-task' : function()
 			{
 				tasks.remove(this.model);
+			},
+			'click input' : function()
+			{
+				this.model.set('done', !this.model.get('done'));
 			},
 		}
 	});
@@ -93,7 +104,16 @@
 
 	var TaskFullView = Backbone.Marionette.ItemView.extend({
 		'template' : '#tpl-task-full',
-		'tagname' : 'p'
+		'tagname' : 'p',
+		'templateHelpers' : {
+			//convertion timestamp->date
+			'stamptodate' : function(time)
+			{
+				var a = new Date(time);
+				var out = a.toLocaleString();
+				return out;
+			}
+		}
 	});
 
 	// Router.
@@ -149,6 +169,7 @@
 
 		router = new Router();
 		Backbone.history.start();
+		tasks.add(new Task({title : "aaa"}));
 	});
 
 	$(function () {
@@ -156,7 +177,6 @@
 	});
 
 	// @todo:
-	// - Afficher correctement les dates.
 	// - Pouvoir cocher les cases dans la vue liste pour les marquer comme faites.
 	// - Gérer les tags/dépendances.
 	//
