@@ -49,7 +49,7 @@
 		'template': '#tpl-task-item',
 		'tagName': 'li',
 		'events': {
-			'click button' : function()
+			'click #delete' : function() //@todo click sur le boutton delete uniquement
 			{
 				tasks.remove(this.model);
 			},
@@ -62,6 +62,7 @@
 		'itemView': TaskItemView,
 		'itemViewContainer': 'ul',
 
+		//we don't close the view in order to be able to redisplay it later
 		'onBeforeClose': function () {
 			return false;
 		},
@@ -89,6 +90,11 @@
 			},
 		}
 	});
+	
+	var TaskFullView = Backbone.Marionette.ItemView.extend({
+		'template' : '#tpl-task-full',
+		'tagname' : 'p'
+	});
 
 	// Router.
 
@@ -97,7 +103,7 @@
 			'': function () {
 				app.main.show(tasks_list_view);
 			},
-			'task/:id': function (id) {
+			'modify/:id': function (id) {
 				// @todo Creates a task only when the form is saved.
 				var task = ('new' === id)
 					? new Task()
@@ -112,10 +118,13 @@
 
 				app.main.show(new TaskFormView({'model': task}));
 			},
+			'task/:id' : function (id) {
+				app.main.show(new TaskFullView({'model' : tasks.get(id)}));
+			},
 			'*path': function (path) { // Default route.
 				alert('this page does not exist!');
 				this.navigate('', {'trigger': true});
-			}
+			},
 		}
 	});
 
@@ -139,6 +148,4 @@
 
 	// @todo:
 	// - Ne créer une tâche qu'après avoir cliqué sur « enregister ».
-	// - Pouvoir effacer une tâche (petit lien à côté de la tâche dans la liste (genre « x »)).
-	// - Réaliser une page où on affiche la tâche (avec date de modif, etc.)
 }();

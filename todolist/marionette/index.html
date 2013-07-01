@@ -16,13 +16,25 @@
 	<!-- Global template for the tasks list. -->
 	<script type="text/template" id="tpl-tasks-list">
 		<ul><!-- items --></ul>
-		<a href="#task/new"><button type="button">Nouveau</button></a>
+		<a href="#modify/new"><button type="button">Nouveau</button></a>
 	</script>
 
 	<!-- Template for each task in the tasks list. -->
 	<script type="text/template" id="tpl-task-item">
 		<a href="#task/<%= id %>"><%= title %></a>
-		<button type="button">delete</button>
+		<button type="button" id="delete">delete</button>
+		<a href="#modify/<%= id %>"><button type="button">modifier</button></a>
+	</script>
+	
+	<!-- template displaying all informations of a task-->
+	<script type="text/template" id="tpl-task-full">
+		titre : <br><%= title %><br/><br>
+		créateur : <br><%= creator %><br><br>
+		date de création : <br><%= ctime %><br><br>
+		date de dernière modification : <br><%= mtime %><br><br>
+		descripion : <br><%= description %><br><br>
+		<a href="#"><button type="button">Retour à la liste</button></a>
+		<a href="#modify/<%= id %>"><button type="button">modifier</button></a>
 	</script>
 
 	<!-- Form for task edition/creation. @todo Removes as many id as possible. -->
