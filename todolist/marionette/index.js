@@ -49,7 +49,7 @@
 		'template': '#tpl-task-item',
 		'tagName': 'li',
 		'events': {
-			'click' : function()
+			'click button' : function()
 			{
 				tasks.remove(this.model);
 			},
@@ -61,12 +61,16 @@
 
 		'itemView': TaskItemView,
 		'itemViewContainer': 'ul',
+
+		'onBeforeClose': function () {
+			return false;
+		},
 	});
 
 	var TaskFormView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-form',
 		'tagName': 'form',
-		
+
 		'events': {
 			'submit' : function(event)
 			{
