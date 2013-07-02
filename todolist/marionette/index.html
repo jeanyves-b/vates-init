@@ -12,24 +12,27 @@
 <body>
 	<!-- Main content area. -->
 	<div id="main"></div>
-
+	<!-- templates for the listing -->
 	<!-- Global template for the tasks list. -->
 	<script type="text/template" id="tpl-tasks-list">
-		<ul><!-- items --></ul>
+		<br/><ul><!-- items --></ul>
 		<a href="#task/new"><button type="button">Nouveau</button></a>
 	</script>
 
 	<!-- Template for each task in the tasks list. -->
 	<script type="text/template" id="tpl-task-item">
 		<input type="checkbox" <% if (done) { %>checked="checked"<% } %>/>
+		id : <%= id %>, 
 		<a href="#task/<%= id %>"><%= title %></a>
 		<button type="button" class="delete-task">delete</button>
 		<a href="#task/<%= id %>/edit"><button type="button">modifier</button></a>
 	</script>
 
+	<!-- template for the detail description -->
 	<!-- template displaying all informations of a task-->
+	<!-- !!!@todo mettre a jour pour afficher les tags/dependencies-->
 	<script type="text/template" id="tpl-task-full">
-		titre : <br><%= title %><br/><br>
+		<br/>titre : <br><%= title %><br><br>
 		créateur : <br><%= creator %><br><br>
 		date de création : <br><%= stamptodate(ctime) %><br><br>
 		date de dernière modification : <br><%= stamptodate(mtime) %><br><br>
@@ -38,10 +41,46 @@
 		<a href="#task/<%= id %>/edit"><button type="button">modifier</button></a>
 	</script>
 
-	<!-- Form for task edition/creation. @todo Removes as many id as possible. -->
+	<!-- templates for the information input -->
+	<!-- template  containing the form and the complete -->
+	<script type="text/template" id="tpl-task-edit">
+		<br/><form name="form-region"><!-- form --></form><br>
+		<div name="tags-region"></div><br>
+		<div name="deps-region"></div>
+	</script>
+	
+	<!-- global template for the tags list -->
+	<script type="text/template" id="tpl-task-tags">
+		tags :<br>
+		<input type="text" name="tag" value="" />
+		<button type="button" name="addtag" >ajouter<button/><br>
+		<ul><!-- tag items --></ul>
+	</script>
+	
+	<!-- template for each tags -->
+	<script type="text/template" id="tpl-task-tag">
+		<%= name %>
+		<button type="button" class="delete">delete</button>
+	</script>
+	
+	<!-- global template for the dependencies list -->
+	<script type="text/template" id="tpl-task-deps">
+		dependencies :<br>
+		<input type="text" name="dep" value="" />
+		<button type="button" name="dep" >ajouter<button/><br>
+		<ul><!-- dependencies items --></ul>
+	</script>
+	
+	<!-- template for each dependencies -->
+	<script type="text/template" id="tpl-task-dep">
+		<%= name %><%= id %>
+		<button type="button" class="delete">delete</button>
+	</script>
+
+	<!-- Form for task edition/creation. -->
 	<script type="text/template" id="tpl-task-form">
 		titre de la tache<br/>
-		<input type="text" name="title" value="<%= title %>" /><br><br>
+		<input type="text" name="title" value="<%= this.model.get('title') %>" /><br><br>
 		créateur de la tache<br>
 		<input type="text" name="creator" value="<%= creator %>" /><br><br>
 		description<br>
