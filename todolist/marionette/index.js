@@ -242,13 +242,9 @@
 				'depsregion': '.tags-region',
 			});
 			formapp.start();
-			formapp.formregion.show(new TaskFormView({'model': this.task}));
-			formapp.tagsregion.show(new TaskTagsView({'model': this.task}));
-			formapp.depsregion.show(new TaskDepsView({'model': this.task}));
-		},
-		
-		'onBeforeClose': function () {
-			formapp.stop();
+			formapp.formregion.show(new TaskFormView({'model': this.model}));
+			formapp.tagsregion.show(new TaskTagsView({'model': this.model}));
+			formapp.depsregion.show(new TaskDepsView({'model': this.model}));
 		},
 	});
 
