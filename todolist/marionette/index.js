@@ -232,7 +232,11 @@
 					alert('no such task!');
 					return;
 				}
-
+				if (task.get('id') === this.options.task_ahead.get('id'))
+				{
+					alert("can't add a task in her own dependencies");
+					return;
+				}
 				this.collection.add(task);
 			},
 		},
@@ -263,7 +267,7 @@
 			deps.listenTo(tasks, 'remove', function (task) {
 				this.remove(task);
 			});
-			this.depsregion.show(new TaskDepsView({'collection': deps}));
+			this.depsregion.show(new TaskDepsView({'collection': deps, 'task_ahead': this.model}));
 		},
 
 		'onBeforeClose': function () {
