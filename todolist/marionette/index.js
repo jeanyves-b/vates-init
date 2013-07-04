@@ -12,42 +12,38 @@
 	//--------------------------------
 	// task model.
 	//--------------------------------
-	var Tasks;
-	var task_id = 0;
+
+	var Task;
+
+	// @todo Remove.
 	var deps;
 	var tags;
-	
+
 	var Tag = Backbone.Model.extend({
 		'defaults': {
 			'name': '',
 		},
 	});
-	
 	var Tags = Backbone.Collection.extend({
 		'model': Tag,
 	});
-	
-	var Dep = Backbone.Model.extend({
-		'defaults': {
-			'name': '',
-			'id': 0,
-		},
+
+	var Tasks = Backbone.Collection.extend({
+		'model': Task,
 	});
-	
-	var Deps = Backbone.Collection.extend({
-		'model': Tag,
-	});
-	
-	var Task = Backbone.Model.extend({
+
+	var task_id = 0;
+	Task = Backbone.Model.extend({
 		'defaults': {
 			'title': '',
 			'creator': '',
 			'description': '',
 			'done': false,
-			
-			'dependencies': new Deps(),
-			'tags': new Tags,
-			
+
+			// @todo Use arrays.
+			'dependencies': new Tasks(),
+			'tags': new Tags(),
+
 			// Unix timestamp.
 			'ctime': 0,
 			'mtime': 0,
@@ -72,10 +68,6 @@
 		},
 	});
 
-	Tasks = Backbone.Collection.extend({
-		'model': Task,
-	});
-	
 	//////////////////////////////////
 	// Views.
 	//////////////////////////////////
@@ -86,18 +78,18 @@
 	var TaskItemView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-item',
 		'tagName': 'li',
-		'initialize' : function(){
+		'initialize': function () {
 			var self = this;
-			this.model.on('change', function(){
+			this.model.on('change', function () {
 				self.render();
 			});
 		},
 		'events': {
-			'click .delete-task' : function()
+			'click .delete-task': function ()
 			{
 				tasks.remove(this.model);
 			},
-			'click input' : function()
+			'click input': function ()
 			{
 				this.model.set('done', !this.model.get('done'));
 			},
@@ -115,17 +107,18 @@
 			return false;
 		},
 	});
-	
+
 	//--------------------------------
 	// task detail views.
 	//--------------------------------
 
+	// @todo Maybe displays the tags.
 	var TaskFullView = Backbone.Marionette.ItemView.extend({
-		'template' : '#tpl-task-full',
-		'tagname' : 'p',
-		'templateHelpers' : {
+		'template': '#tpl-task-full',
+		'tagname': 'p',
+		'templateHelpers': {
 			//convertion timestamp->date
-			'stamptodate' : function(time)
+			'stamptodate': function(time)
 			{
 				var a = new Date(time);
 				var out = a.toLocaleString();
@@ -137,14 +130,14 @@
 	//--------------------------------
 	// task edition views.
 	//--------------------------------
-	
+
 	//form view
 	var TaskFormView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-form',
 		'tagName': 'form',
 
 		'events': {
-			'submit' : function(event)
+			'submit': function(event)
 			{
 				event.preventDefault();
 
@@ -161,12 +154,12 @@
 			},
 		}
 	});
-	
+
 	//tag view
 	var TaskTagView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-tag',
 		'tagName': 'li',
-		'initialize': function(){
+		'initialize': function () {
 			var self = this;
 			this.model.on('change', function () {
 				self.render();
@@ -178,33 +171,33 @@
 			},
 		},
 	});
-	
+
 	//tag list view
 	var TaskTagsView = Backbone.Marionette.CompositeView.extend({
 		'template': '#tpl-task-tags',
-		
+
 		'itemView': TaskTagView,
 		'itemViewContainer': 'ol',
-		
+
 		'initialize': function () {
 			tags = this.model;
 		},
-		
+
 		'events': {
 			'click .addtag': function ()
 			{
 				var a = this.$el.find('input');
-				var b = new tag({'name' : a});
+				var b = new tag({'name': a});
 				tags.add(b);
 			},
 		}
 	});
-	
+
 	//dependence view
 	var TaskDepView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-dep',
 		'tagName': 'li',
-		'initialize': function(){
+		'initialize': function () {
 			var self = this;
 			this.model.on('change', function () {
 				self.render();
@@ -216,36 +209,42 @@
 			},
 		},
 	});
-	
+
 	//dependence list view
 	var TaskDepsView = Backbone.Marionette.CompositeView.extend({
 		'template': '#tpl-task-deps',
-		
+
 		'itemView': TaskDepView,
 		'itemViewContainer': 'ol',
-		
+
 		'initialize': function () {
 			deps = this.model;
 		},
-		
+
 		'events': {
 			'click .adddep': function ()
 			{
 				var a = this.$el.find('input');
-				var b = new dep({'name' : a});
+				var b = new dep({'name': a});
 				deps.add(b);
 			},
 		},
 	});
-	
+
 	//global view
 	var EditLayout = Backbone.Marionette.Layout.extend({
-		'template' : '#tpl-task-edit',
-		'regions' : {
+		'template': '#tpl-task-edit',
+		'regions': {
 			'formregion': '.form-region',
 			'tagsregion': '.tags-region',
-			'depsregion': '.tags-region',
-		}
+			'depsregion': '.deps-region',
+		},
+
+		'onDomRefresh': function () {
+			this.formregion.show(new TaskFormView({'model': this.model}));
+			this.tagsregion.show(new TaskTagsView({'model': this.model}));
+			this.depsregion.show(new TaskDepsView({'model': this.model}));
+		},
 	});
 
 	//////////////////////////////////
@@ -258,13 +257,7 @@
 				app.main.show(tasks_list_view);
 			},
 			'task/new': function () {
-				var formlayout = new EditLayout();
-				var task = new Task();
-				formlayout.render();
-				formlayout.formregion.show(new TaskFormView({'model': task}));
-				formlayout.tagsregion.show(new TaskTagsView({'model': task}));
-				formlayout.depsregion.show(new TaskDepsView({'model': task}));
-				app.main.show(new EditLayout({'model': task}));
+				app.main.show(new EditLayout({'model': new Task()}));
 			},
 			'task/:id/edit': function (id) {
 				var task = tasks.get(id);
@@ -276,9 +269,9 @@
 					return;
 				}
 
-				app.main.show(new TaskFormView({'model': task}));
+				app.main.show(new EditLayout({'model': task}));
 			},
-			'task/:id' : function (id) {
+			'task/:id': function (id) {
 				var task = tasks.get(id);
 
 				if (!task)
@@ -311,7 +304,7 @@
 
 		router = new Router();
 		Backbone.history.start();
-		//tasks.add(new Task({title : "aaa"}));
+		//tasks.add(new Task({title: "aaa"}));
 	});
 
 	$(function () {
