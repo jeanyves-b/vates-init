@@ -180,16 +180,14 @@
 		'itemViewContainer': 'ol',
 
 		'initialize': function () {
-			tags = this.model;
+			tags = this.collection; // @todo Find a way to remove the global variable.
 		},
 
 		'events': {
-			'click .addtag': function ()
-			{
+			'click .addtag': function () {
 				var a = this.$('input');
-				var b = new Tag({'name': a});
-				this.model.add(b);
-				console.log(this.model);
+				var b = new Tag({'name': a.val()});
+				this.collection.add(b);
 			},
 		}
 	});
@@ -219,7 +217,7 @@
 		'itemViewContainer': 'ol',
 
 		'initialize': function () {
-			deps = this.model;
+			deps = this.collection;
 		},
 
 		'events': {
@@ -227,7 +225,7 @@
 			{
 				var a = this.$el.find('input');
 				var b = new dep({'name': a});
-				deps.add(b);
+				this.collection.add(b);
 			},
 		},
 	});
@@ -243,8 +241,8 @@
 
 		'onDomRefresh': function () {
 			this.formregion.show(new TaskFormView({'model': this.model}));
-			this.tagsregion.show(new TaskTagsView({'model': this.model.get('tags')}));
-			this.depsregion.show(new TaskDepsView({'model': this.model.get('deps')}));
+			this.tagsregion.show(new TaskTagsView({'collection': this.model.get('tags')}));
+			this.depsregion.show(new TaskDepsView({'collection': this.model.get('deps')}));
 		},
 	});
 
