@@ -186,9 +186,10 @@
 		'events': {
 			'click .addtag': function ()
 			{
-				var a = this.$el.find('input');
-				var b = new tag({'name': a});
-				tags.add(b);
+				var a = this.$('input');
+				var b = new Tag({'name': a});
+				this.model.add(b);
+				console.log(this.model);
 			},
 		}
 	});
@@ -242,8 +243,8 @@
 
 		'onDomRefresh': function () {
 			this.formregion.show(new TaskFormView({'model': this.model}));
-			this.tagsregion.show(new TaskTagsView({'model': this.model}));
-			this.depsregion.show(new TaskDepsView({'model': this.model}));
+			this.tagsregion.show(new TaskTagsView({'model': this.model.get('tags')}));
+			this.depsregion.show(new TaskDepsView({'model': this.model.get('deps')}));
 		},
 	});
 
