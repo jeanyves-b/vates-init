@@ -2,12 +2,20 @@
 <html>
 <head>
 	<meta charset="utf-8" />
+
 	<title>TODOlist</title>
+
 	<script src="http://underscorejs.org/underscore.js"></script>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 	<script src="http://backbonejs.org/backbone.js"></script>
 	<script src="http://marionettejs.com/downloads/backbone.marionette.js"></script>
 	<script src="index.js"></script>
+
+	<style type="text/css">
+		.task-done {
+			text-decoration: line-through
+		}
+	</style>
 </head>
 <body>
 	<!-- Main content area. -->
@@ -23,8 +31,7 @@
 	<!-- Template for each task in the tasks list. -->
 	<script type="text/template" id="tpl-task-item">
 		<input type="checkbox" <% if (done) { %>checked="checked"<% } %>/>
-		id : <%= id %>,
-		<a href="#task/<%= id %>"><%= title %></a>
+		<a href="#task/<%= id %>"<% if (done) { %> class="task-done"<% } %>>#<%= id %>: <%= title %></a>
 		<button type="button" class="delete-task">delete</button>
 		<a href="#task/<%= id %>/edit"><button type="button">modifier</button></a>
 	</script>
@@ -74,7 +81,7 @@
 
 	<!-- template for each dependencies -->
 	<script type="text/template" id="tpl-task-dep">
-		<%= name %><%= id %>
+		<a href="#task/<%= id %>"<% if (done) { %> class="task-done"<% } %>>#<%= id %>: <%= title %></a>
 		<button type="button" class="delete">delete</button>
 	</script>
 

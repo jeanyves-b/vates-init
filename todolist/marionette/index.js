@@ -40,9 +40,8 @@
 			'description': '',
 			'done': false,
 
-			// @todo Use arrays.
-			'dependencies': new Tasks(),
-			'tags': new Tags(),
+			'dependencies': [],
+			'tags': [],
 
 			// Unix timestamp.
 			'ctime': 0,
@@ -147,6 +146,18 @@
 				});
 				this.model.set(attributes);
 
+				var tags_ = [];
+				tags.each(function (tag) {
+					tags_.push(tag.get('name'));
+				});
+				this.model.set('tags', tags_);
+
+				var deps_ = [];
+				deps.each(function (task) {
+					deps_.push(task.get('id'));
+				});
+				this.model.set('deps', deps_);
+
 				tasks.add(this.model);
 
 				// Return to the tasks list.
@@ -178,10 +189,6 @@
 
 		'itemView': TaskTagView,
 		'itemViewContainer': 'ol',
-
-		'initialize': function () {
-			tags = this.collection; // @todo Find a way to remove the global variable.
-		},
 
 		'events': {
 			'click .addtag': function () {
@@ -216,16 +223,18 @@
 		'itemView': TaskDepView,
 		'itemViewContainer': 'ol',
 
-		'initialize': function () {
-			deps = this.collection;
-		},
-
 		'events': {
 			'click .adddep': function ()
 			{
-				var a = this.$el.find('input');
-				var b = new dep({'name': a});
-				this.collection.add(b);
+				var task_id = this.$el.find('input').val();
+				var task = tasks.get(task_id);
+				if (!task)
+				{
+					alert('no such task!');
+					return;
+				}
+
+				this.collection.add(task);
 			},
 		},
 	});
@@ -241,8 +250,27 @@
 
 		'onDomRefresh': function () {
 			this.formregion.show(new TaskFormView({'model': this.model}));
-			this.tagsregion.show(new TaskTagsView({'collection': this.model.get('tags')}));
-			this.depsregion.show(new TaskDepsView({'collection': this.model.get('deps')}));
+
+			tags = new Tags();
+			_.each(this.model.get('tags'), function (tag) {
+				tags.add({'name': tag});
+			});
+			this.tagsregion.show(new TaskTagsView({'collection': tags}));
+
+			deps = new Tasks();
+			_.each(this.model.get('deps'), function (task_id) {
+				deps.add(tasks.get(task_id));
+			});
+			deps.listenTo(tasks, 'remove', function (task) {
+				this.remove(task);
+			});
+			this.depsregion.show(new TaskDepsView({'collection': deps}));
+		},
+
+		'onBeforeClose': function () {
+			// Remove this listener when no longer useful to prevent a
+			// memory leak.
+			deps.stopListening(tasks);
 		},
 	});
 
@@ -311,7 +339,8 @@
 	});
 
 	// @todo:
-	// - Gérer les tags/dépendances.
+	// - Ne pas autoriser une tâche à être sa propre dépendance.
+	// - Ne pas séparer le formulaire des listes de tâches et dépendances.
 	//
 	// - Ne créer une tâche qu'après avoir cliqué sur « enregister ».
 }();
