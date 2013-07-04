@@ -111,7 +111,6 @@
 	// task detail views.
 	//--------------------------------
 
-	// @todo Maybe displays the tags.
 	var TaskFullView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-full',
 		'tagname': 'p',
@@ -328,10 +327,11 @@
 		tasks_list_view = new TasksListView({
 			'collection': tasks,
 		});
+		app.main.show(tasks_list_view);
 
 		router = new Router();
 		Backbone.history.start();
-		//tasks.add(new Task({title: "aaa"}));
+		tasks.add(new Task({title: "aaa"}));
 	});
 
 	$(function () {
