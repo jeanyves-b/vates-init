@@ -2,7 +2,6 @@
 	'use strict';
 
 	var app;
-	var formapp;
 	var router;
 	var tasks_list_view;
 	var tasks;
@@ -139,6 +138,7 @@
 	// task edition views.
 	//--------------------------------
 	
+	//form view
 	var TaskFormView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-form',
 		'tagName': 'form',
@@ -162,8 +162,10 @@
 		}
 	});
 	
+	//tag view
 	var TaskTagView = Backbone.Marionette.ItemView.extend({
-		'template': 'tpl-task-tag',
+		'template': '#tpl-task-tag',
+		'tagName': 'li',
 		'initialize': function(){
 			var self = this;
 			this.model.on('change', function () {
@@ -177,8 +179,9 @@
 		},
 	});
 	
+	//tag list view
 	var TaskTagsView = Backbone.Marionette.CompositeView.extend({
-		'template': 'tpl-task-tags',
+		'template': '#tpl-task-tags',
 		
 		'itemView': TaskTagView,
 		'itemViewContainer': 'ol',
@@ -197,8 +200,10 @@
 		}
 	});
 	
+	//dependence view
 	var TaskDepView = Backbone.Marionette.ItemView.extend({
-		'template': 'tpl-task-dep',
+		'template': '#tpl-task-dep',
+		'tagName': 'li',
 		'initialize': function(){
 			var self = this;
 			this.model.on('change', function () {
@@ -212,8 +217,9 @@
 		},
 	});
 	
+	//dependence list view
 	var TaskDepsView = Backbone.Marionette.CompositeView.extend({
-		'template': 'tpl-task-deps',
+		'template': '#tpl-task-deps',
 		
 		'itemView': TaskDepView,
 		'itemViewContainer': 'ol',
@@ -232,20 +238,14 @@
 		},
 	});
 	
-	var TaskEditView = Backbone.Marionette.ItemView.extend({
-		'template': 'tpl-task-edit',
-		'initialize': function () {
-			formapp = new Backbone.Marionette.Application();
-			formapp.addRegions({
-				'formregion': '.form-region',
-				'tagsregion': '.tags-region',
-				'depsregion': '.tags-region',
-			});
-			formapp.start();
-			formapp.formregion.show(new TaskFormView({'model': this.model}));
-			formapp.tagsregion.show(new TaskTagsView({'model': this.model}));
-			formapp.depsregion.show(new TaskDepsView({'model': this.model}));
-		},
+	//global view
+	var EditLayout = Backbone.Marionette.Layout.extend({
+		'template' : '#tpl-task-edit',
+		'regions' : {
+			'formregion': '.form-region',
+			'tagsregion': '.tags-region',
+			'depsregion': '.tags-region',
+		}
 	});
 
 	//////////////////////////////////
@@ -258,7 +258,13 @@
 				app.main.show(tasks_list_view);
 			},
 			'task/new': function () {
-				app.main.show(new TaskEditView({'model': new Task()}));
+				var formlayout = new EditLayout();
+				var task = new Task();
+				formlayout.render();
+				formlayout.formregion.show(new TaskFormView({'model': task}));
+				formlayout.tagsregion.show(new TaskTagsView({'model': task}));
+				formlayout.depsregion.show(new TaskDepsView({'model': task}));
+				app.main.show(new EditLayout({'model': task}));
 			},
 			'task/:id/edit': function (id) {
 				var task = tasks.get(id);
@@ -305,7 +311,7 @@
 
 		router = new Router();
 		Backbone.history.start();
-		tasks.add(new Task({title : "aaa"}));
+		//tasks.add(new Task({title : "aaa"}));
 	});
 
 	$(function () {
