@@ -1,6 +1,9 @@
 !function () {
 	'use strict';
 
+	/* jshint devel:true, es5:true */
+	/* global _, $, Backbone */
+
 	var app;
 	var router;
 	var tasks_list_view;
@@ -106,7 +109,7 @@
 			return false;
 		},
 	});
-	
+
 	//--------------------------------
 	//common parts
 	//--------------------------------
@@ -146,7 +149,10 @@
 			deps.listenTo(tasks, 'remove', function (task) {
 				this.remove(task);
 			});
-			this.depsregion.show(new FullTaskDepsView({'collection': deps, 'task_ahead': this.model}));
+			this.depsregion.show(new FullTaskDepsView({
+				'collection': deps,
+				'task_ahead': this.model
+			}));
 		},
 
 		'onBeforeClose': function () {
@@ -155,7 +161,7 @@
 			deps.stopListening(tasks);
 		},
 	});
-	
+
 	//tag view
 	var FullTaskTagView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-full-task-tag',
@@ -200,42 +206,6 @@
 	// task edition views.
 	//--------------------------------
 
-	//form view
-	var TaskFormView = Backbone.Marionette.ItemView.extend({
-		'template': '#tpl-task-form',
-		'tagName': 'form',
-
-		'events': {
-			'submit': function(event)
-			{
-				event.preventDefault();
-
-				var attributes = {};
-				_.each(this.$(':input').serializeArray(), function (entry) {
-					attributes[entry.name] = entry.value;
-				});
-				this.model.set(attributes);
-
-				var tags_ = [];
-				tags.each(function (tag) {
-					tags_.push(tag.get('name'));
-				});
-				this.model.set('tags', tags_);
-
-				var deps_ = [];
-				deps.each(function (task) {
-					deps_.push(task.get('id'));
-				});
-				this.model.set('deps', deps_);
-
-				tasks.add(this.model);
-
-				// Return to the tasks list.
-				router.navigate('', {'trigger': true});
-			},
-		},
-	});
-	
 	//tag view
 	var TaskTagView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-tag',
@@ -280,7 +250,7 @@
 		'events': {
 			'click .addtag': function () {
 				this.collection.add(new Tag({'name': this.$('input').val()}));
-				this.$el.find('input').val("");
+				this.$el.find('input').val('');
 			},
 		}
 	});
@@ -297,7 +267,7 @@
 			{
 				var task_id = this.$el.find('input').val();
 				var task = tasks.get(task_id);
-				this.$el.find('input').val("");
+				this.$el.find('input').val('');
 				if (!task)
 				{
 					alert('no such task!');
@@ -305,7 +275,7 @@
 				}
 				if (task.get('id') === this.options.task_ahead.get('id'))
 				{
-					alert("can't add a task in her own dependencies");
+					alert('can\'t add a task in her own dependencies');
 					return;
 				}
 				this.collection.add(task);
@@ -365,7 +335,10 @@
 			deps.listenTo(tasks, 'remove', function (task) {
 				this.remove(task);
 			});
-			this.depsregion.show(new TaskDepsView({'collection': deps, 'task_ahead': this.model}));
+			this.depsregion.show(new TaskDepsView({
+				'collection': deps,
+				'task_ahead': this.model,
+			}));
 		},
 
 		'onBeforeClose': function () {
@@ -411,7 +384,7 @@
 
 				app.main.show(new FullTaskView({'model': task}));
 			},
-			'*path': function (path) { // Default route.
+			'*path': function () { // Default route.
 				alert('this page does not exist!');
 				this.navigate('', {'trigger': true});
 			},
@@ -433,7 +406,7 @@
 
 		router = new Router();
 		Backbone.history.start();
-		tasks.add(new Task({title: "aaa"}));
+		tasks.add(new Task({title: 'aaa'}));
 	});
 
 	$(function () {
