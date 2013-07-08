@@ -235,6 +235,7 @@
 				if (task.get('id') === this.options.task_ahead.get('id'))
 				{
 					alert("can't add a task in her own dependencies");
+					this.$el.find('input').val("");
 					return;
 				}
 				this.collection.add(task);
