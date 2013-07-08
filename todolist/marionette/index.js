@@ -106,14 +106,22 @@
 			return false;
 		},
 	});
+	
+	//--------------------------------
+	//common parts
+	//--------------------------------
 
 	//--------------------------------
 	// task detail views.
 	//--------------------------------
 
-	var TaskFullView = Backbone.Marionette.ItemView.extend({
+	var FullTaskView = Backbone.Marionette.Layout.extend({
 		'template': '#tpl-task-full',
 		'tagname': 'p',
+		'regions': {
+			'tagsregion': '.tags-region',
+			'depsregion': '.deps-region',
+		},
 		'templateHelpers': {
 			//convertion timestamp->date
 			'stamptodate': function(time)
@@ -122,7 +130,70 @@
 				var out = a.toLocaleString();
 				return out;
 			}
-		}
+		},
+
+		'onDomRefresh': function () {
+			tags = new Tags();
+			_.each(this.model.get('tags'), function (tag) {
+				tags.add({'name': tag});
+			});
+			this.tagsregion.show(new FullTaskTagsView({'collection': tags}));
+
+			deps = new Tasks();
+			_.each(this.model.get('deps'), function (task_id) {
+				deps.add(tasks.get(task_id));
+			});
+			deps.listenTo(tasks, 'remove', function (task) {
+				this.remove(task);
+			});
+			this.depsregion.show(new FullTaskDepsView({'collection': deps, 'task_ahead': this.model}));
+		},
+
+		'onBeforeClose': function () {
+			// Remove this listener when no longer useful to prevent a
+			// memory leak.
+			deps.stopListening(tasks);
+		},
+	});
+	
+	//tag view
+	var FullTaskTagView = Backbone.Marionette.ItemView.extend({
+		'template': '#tpl-full-task-tag',
+		'tagName': 'li',
+		'initialize': function () {
+			var self = this;
+			this.model.on('change', function () {
+				self.render();
+			});
+		},
+	});
+
+	//dependence view
+	var FullTaskDepView = Backbone.Marionette.ItemView.extend({
+		'template': '#tpl-full-task-dep',
+		'tagName': 'li',
+		'initialize': function () {
+			var self = this;
+			this.model.on('change', function () {
+				self.render();
+			});
+		},
+	});
+
+	//tags list view
+	var FullTaskTagsView = Backbone.Marionette.CompositeView.extend({
+		'template': '#tpl-full-task-tags',
+
+		'itemView': FullTaskTagView,
+		'itemViewContainer': 'ol',
+	});
+
+	//dependences list view
+	var FullTaskDepsView = Backbone.Marionette.CompositeView.extend({
+		'template': '#tpl-full-task-deps',
+
+		'itemView': FullTaskDepView,
+		'itemViewContainer': 'ol',
 	});
 
 	//--------------------------------
@@ -162,9 +233,9 @@
 				// Return to the tasks list.
 				router.navigate('', {'trigger': true});
 			},
-		}
+		},
 	});
-
+	
 	//tag view
 	var TaskTagView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-tag',
@@ -180,22 +251,6 @@
 				tags.remove(this.model);
 			},
 		},
-	});
-
-	//tag list view
-	var TaskTagsView = Backbone.Marionette.CompositeView.extend({
-		'template': '#tpl-task-tags',
-
-		'itemView': TaskTagView,
-		'itemViewContainer': 'ol',
-
-		'events': {
-			'click .addtag': function () {
-				var a = this.$('input');
-				var b = new Tag({'name': a.val()});
-				this.collection.add(b);
-			},
-		}
 	});
 
 	//dependence view
@@ -215,7 +270,22 @@
 		},
 	});
 
-	//dependence list view
+	//tags list view
+	var TaskTagsView = Backbone.Marionette.CompositeView.extend({
+		'template': '#tpl-task-tags',
+
+		'itemView': TaskTagView,
+		'itemViewContainer': 'ol',
+
+		'events': {
+			'click .addtag': function () {
+				this.collection.add(new Tag({'name': this.$('input').val()}));
+				this.$el.find('input').val("");
+			},
+		}
+	});
+
+	//dependences list view
 	var TaskDepsView = Backbone.Marionette.CompositeView.extend({
 		'template': '#tpl-task-deps',
 
@@ -227,6 +297,7 @@
 			{
 				var task_id = this.$el.find('input').val();
 				var task = tasks.get(task_id);
+				this.$el.find('input').val("");
 				if (!task)
 				{
 					alert('no such task!');
@@ -235,7 +306,6 @@
 				if (task.get('id') === this.options.task_ahead.get('id'))
 				{
 					alert("can't add a task in her own dependencies");
-					this.$el.find('input').val("");
 					return;
 				}
 				this.collection.add(task);
@@ -247,14 +317,41 @@
 	var EditLayout = Backbone.Marionette.Layout.extend({
 		'template': '#tpl-task-edit',
 		'regions': {
-			'formregion': '.form-region',
 			'tagsregion': '.tags-region',
 			'depsregion': '.deps-region',
 		},
 
-		'onDomRefresh': function () {
-			this.formregion.show(new TaskFormView({'model': this.model}));
+		'events': {
+			'submit': function(event)
+			{
+				event.preventDefault();
 
+				var attributes = {};
+				_.each(this.$(':input').serializeArray(), function (entry) {
+					attributes[entry.name] = entry.value;
+				});
+				this.model.set(attributes);
+
+				var tags_ = [];
+				tags.each(function (tag) {
+					tags_.push(tag.get('name'));
+				});
+				this.model.set('tags', tags_);
+
+				var deps_ = [];
+				deps.each(function (task) {
+					deps_.push(task.get('id'));
+				});
+				this.model.set('deps', deps_);
+
+				tasks.add(this.model);
+
+				// Return to the tasks list.
+				router.navigate('', {'trigger': true});
+			},
+		},
+
+		'onDomRefresh': function () {
 			tags = new Tags();
 			_.each(this.model.get('tags'), function (tag) {
 				tags.add({'name': tag});
@@ -312,7 +409,7 @@
 					return;
 				}
 
-				app.main.show(new TaskFullView({'model': task}));
+				app.main.show(new FullTaskView({'model': task}));
 			},
 			'*path': function (path) { // Default route.
 				alert('this page does not exist!');
@@ -344,8 +441,8 @@
 	});
 
 	// @todo:
-	// - Ne pas autoriser une tâche à être sa propre dépendance.
-	// - Ne pas séparer le formulaire des listes de tâches et dépendances.
+	// - Netoyer/aligner/... la vue détaillée.
+	// - Ajouter du CSS?
 	//
 	// - Ne créer une tâche qu'après avoir cliqué sur « enregister ».
 }();

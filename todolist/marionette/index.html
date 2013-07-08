@@ -45,16 +45,50 @@
 		date de création : <br><%= stamptodate(ctime) %><br><br>
 		date de dernière modification : <br><%= stamptodate(mtime) %><br><br>
 		descripion : <br><%= description %><br><br>
+		<ol class="tags-region"></ol><br>
+		<ol class="deps-region"></ol><br>
 		<a href="#"><button type="button">Retour à la liste</button></a>
 		<a href="#task/<%= id %>/edit"><button type="button">modifier</button></a>
+	</script>
+
+	<!-- template for each tags -->
+	<script type="text/template" id="tpl-full-task-tag">
+		<%= name %>
+	</script>
+
+	<!-- global template for the tags list -->
+	<script type="text/template" id="tpl-full-task-tags">
+		tags :<br>
+		<ol><!-- tag items --></ol>
+	</script>
+
+	<!-- template for each dependencies -->
+	<script type="text/template" id="tpl-full-task-dep">
+		<a href="#task/<%= id %>"<% if (done) { %> class="task-done"<% } %>>#<%= id %>: <%= title %></a>
+	</script>
+
+	<!-- global template for the dependencies list -->
+	<script type="text/template" id="tpl-full-task-deps">
+		dependencies :<br>
+		<ol><!-- dependencies items --></ol>
 	</script>
 
 	<!-- templates for the information input -->
 	<!-- template  containing the form and the complete -->
 	<script type="text/template" id="tpl-task-edit">
-		<br/><form class="form-region"><!-- form --></form><br>
-		<div class="tags-region"></div><br>
-		<div class="deps-region"></div>
+		<br/><form>
+			titre de la tache<br/>
+			<input type="text" name="title" value="<%= title %>" /><br><br>
+			créateur de la tache<br>
+			<input type="text" name="creator" value="<%= creator %>" /><br><br>
+			description<br>
+			<textarea name="description" rows="4" cols="70"><%= description %></textarea><br>
+			<div class="tags-region"></div><br>
+			<div class="deps-region"></div>
+			<input type="submit" value="enregistrer" />
+			<input type="reset" value="reinitialiser" /><br>
+			<a href="#"><button type="button">Retour à la liste</button></a>
+		</form><br>
 	</script>
 
 	<!-- global template for the tags list -->
@@ -83,19 +117,6 @@
 	<script type="text/template" id="tpl-task-dep">
 		<a href="#task/<%= id %>"<% if (done) { %> class="task-done"<% } %>>#<%= id %>: <%= title %></a>
 		<button type="button" class="delete">delete</button>
-	</script>
-
-	<!-- Form for task edition/creation. -->
-	<script type="text/template" id="tpl-task-form">
-		titre de la tache<br/>
-		<input type="text" name="title" value="<%= title %>" /><br><br>
-		créateur de la tache<br>
-		<input type="text" name="creator" value="<%= creator %>" /><br><br>
-		description<br>
-		<textarea name="description" rows="4" cols="70"><%= description %></textarea><br>
-		<input type="submit" value="enregistrer" />
-		<input type="reset" value="reinitialiser" /><br>
-		<a href="#"><button type="button">Retour à la liste</button></a>
 	</script>
 </body>
 </html>
