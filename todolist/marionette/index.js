@@ -441,6 +441,7 @@
 	});
 
 	// @todo:
+	// - gestion sauvegarde
 	// - Netoyer/aligner/... la vue détaillée.
 	// - Ajouter du CSS?
 	//
