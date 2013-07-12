@@ -29,38 +29,21 @@
 		'model': Tag,
 	});
 
-	var task_id = 0;
 	var Task = Backbone.Model.extend({
-		'defaults': {
-			'title': '',
-			'creator': '',
-			'description': '',
-			'done': false,
+		'defaults': function () {
+			return  {
+				'title': '',
+				'creator': '',
+				'description': '',
+				'done': false,
 
-			'dependencies': [],
-			'tags': [],
+				'dependencies': [],
+				'tags': [],
 
-			// Unix timestamp.
-			'ctime': 0,
-			'mtime': 0,
-		},
-
-		'initialize': function () {
-			var now = Date.now();
-
-			var id = this.get('id');
-			this.set({
-				'id': (undefined !== id) ? id : task_id,
-				'ctime': now,
-				'mtime': now,
-			});
-
-			this.on('change', function () {
-				this.set(
-					{'mtime': Date.now()},
-					{'silent': true}
-				);
-			});
+				// Unix timestamp.
+				'ctime': 0,
+				'mtime': 0,
+			};
 		},
 	});
 
@@ -69,20 +52,36 @@
 		'localStorage': new Backbone.LocalStorage('TasksStorage'),
 		'initialize': function() {
 			this.on('add', function (task) {
-				++task_id;
-				task.save();
+
+				// If this is not a fetch but a real task creation.
+				if (!task.get('ctime'))
+				{
+					var now = Date.now();
+
+					task.set({
+						'id': this.nextId(),
+						'ctime': now,
+						'mtime': now,
+					});
+
+					task.save();
+				}
 			});
 			this.on('remove', function (task) {
 				task.destroy();
 			});
 			this.on('change', function (task) {
+				// task.set(
+				// 	{'mtime': Date.now()}
+				// );
 				task.save();
 			});
 		},
-		'last_id': function() {
-			return this.max(function (task) {
+		'nextId': function() {
+			var max_task = this.max(function (task) {
 				return task.get('id');
-			}).get('id');
+			});
+			return (-Infinity !== max_task ? max_task.get('id') + 1 : 0);
 		},
 	});
 
@@ -411,10 +410,6 @@
 	app.addInitializer(function () {
 		tasks = new Tasks();
 		tasks.fetch();
-		if (tasks.length)
-		{
-			task_id = tasks.last_id() + 1;
-		}
 		tasks_list_view = new TasksListView({
 			'collection': tasks,
 		});
@@ -429,9 +424,6 @@
 	});
 
 	// @todo:
-	// - gestion sauvegarde
 	// - Netoyer/aligner/... la vue détaillée.
 	// - Ajouter du CSS?
-	//
-	// - Ne créer une tâche qu'après avoir cliqué sur « enregister ».
 }();
