@@ -31,7 +31,6 @@
 
 	var task_id = 0;
 	var Task = Backbone.Model.extend({
-		'localStorage': new Backbone.LocalStorage("TasksStorage"),
 		'defaults': {
 			'title': '',
 			'creator': '',
@@ -49,8 +48,9 @@
 		'initialize': function () {
 			var now = Date.now();
 
+			var id = this.get('id');
 			this.set({
-				'id': task_id,
+				'id': (undefined !== id) ? id : task_id,
 				'ctime': now,
 				'mtime': now,
 			});
@@ -60,34 +60,29 @@
 					{'mtime': Date.now()},
 					{'silent': true}
 				);
-				this.save();
 			});
 		},
 	});
 
 	var Tasks = Backbone.Collection.extend({
 		'model': Task,
-		'localStorage': new Backbone.LocalStorage("TasksStorage"),
+		'localStorage': new Backbone.LocalStorage('TasksStorage'),
 		'initialize': function() {
-			this.on('add', function() {
-				task_id ++;
-				_.each(this.model, function() {
-					this.save();
-				});
+			this.on('add', function (task) {
+				++task_id;
+				task.save();
 			});
-			this.on('remove', function() {
-				_.each(this.model, function() {
-					this.save();
-				});
+			this.on('remove', function (task) {
+				task.destroy();
 			});
-			this.on('changes', function() {
-				_.each(this.model, function() {
-					this.save();
-				});
+			this.on('change', function (task) {
+				task.save();
 			});
 		},
 		'last_id': function() {
-			return this.at(this.length-1).get('id');
+			return this.max(function (task) {
+				return task.get('id');
+			}).get('id');
 		},
 	});
 
@@ -111,7 +106,6 @@
 			'click .delete-task': function ()
 			{
 				tasks.remove(this.model);
-				this.model.destroy();
 			},
 			'click input': function ()
 			{
@@ -125,15 +119,6 @@
 
 		'itemView': TaskItemView,
 		'itemViewContainer': 'ul',
-		
-		'events': {
-			'click .test': function() 
-			{
-				console.log("papillon");
-				tasks = new Tasks;
-				tasks.fetch();
-			},
-		},
 
 		//we don't close the view in order to be able to redisplay it later
 		'onBeforeClose': function () {
@@ -340,8 +325,7 @@
 				});
 				this.model.set('deps', deps_);
 
-				tasks.push(this.model);
-				this.model.save();
+				tasks.add(this.model);
 
 				// Return to the tasks list.
 				router.navigate('', {'trigger': true});
