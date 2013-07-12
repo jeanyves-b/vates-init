@@ -16,8 +16,6 @@
 	// task model.
 	//--------------------------------
 
-	var Task;
-
 	// @todo Remove.
 	var deps;
 	var tags;
@@ -31,12 +29,9 @@
 		'model': Tag,
 	});
 
-	var Tasks = Backbone.Collection.extend({
-		'model': Task,
-	});
-
 	var task_id = 0;
-	Task = Backbone.Model.extend({
+	var Task = Backbone.Model.extend({
+		'localStorage': new Backbone.LocalStorage("TasksStorage"),
 		'defaults': {
 			'title': '',
 			'creator': '',
@@ -55,8 +50,7 @@
 			var now = Date.now();
 
 			this.set({
-				'id': task_id++,
-
+				'id': task_id,
 				'ctime': now,
 				'mtime': now,
 			});
@@ -66,7 +60,34 @@
 					{'mtime': Date.now()},
 					{'silent': true}
 				);
+				this.save();
 			});
+		},
+	});
+
+	var Tasks = Backbone.Collection.extend({
+		'model': Task,
+		'localStorage': new Backbone.LocalStorage("TasksStorage"),
+		'initialize': function() {
+			this.on('add', function() {
+				task_id ++;
+				_.each(this.model, function() {
+					this.save();
+				});
+			});
+			this.on('remove', function() {
+				_.each(this.model, function() {
+					this.save();
+				});
+			});
+			this.on('changes', function() {
+				_.each(this.model, function() {
+					this.save();
+				});
+			});
+		},
+		'last_id': function() {
+			return this.at(this.length-1).get('id');
 		},
 	});
 
@@ -90,6 +111,7 @@
 			'click .delete-task': function ()
 			{
 				tasks.remove(this.model);
+				this.model.destroy();
 			},
 			'click input': function ()
 			{
@@ -103,16 +125,21 @@
 
 		'itemView': TaskItemView,
 		'itemViewContainer': 'ul',
+		
+		'events': {
+			'click .test': function() 
+			{
+				console.log("papillon");
+				tasks = new Tasks;
+				tasks.fetch();
+			},
+		},
 
 		//we don't close the view in order to be able to redisplay it later
 		'onBeforeClose': function () {
 			return false;
 		},
 	});
-
-	//--------------------------------
-	//common parts
-	//--------------------------------
 
 	//--------------------------------
 	// task detail views.
@@ -138,13 +165,13 @@
 		'onDomRefresh': function () {
 			tags = new Tags();
 			_.each(this.model.get('tags'), function (tag) {
-				tags.add({'name': tag});
+				tags.push({'name': tag});
 			});
 			this.tagsregion.show(new FullTaskTagsView({'collection': tags}));
 
 			deps = new Tasks();
 			_.each(this.model.get('deps'), function (task_id) {
-				deps.add(tasks.get(task_id));
+				deps.push(tasks.get(task_id));
 			});
 			deps.listenTo(tasks, 'remove', function (task) {
 				this.remove(task);
@@ -205,7 +232,6 @@
 	//--------------------------------
 	// task edition views.
 	//--------------------------------
-
 	//tag view
 	var TaskTagView = Backbone.Marionette.ItemView.extend({
 		'template': '#tpl-task-tag',
@@ -249,7 +275,7 @@
 
 		'events': {
 			'click .addtag': function () {
-				this.collection.add(new Tag({'name': this.$('input').val()}));
+				this.collection.push(new Tag({'name': this.$('input').val()}));
 				this.$el.find('input').val('');
 			},
 		}
@@ -278,12 +304,12 @@
 					alert('can\'t add a task in her own dependencies');
 					return;
 				}
-				this.collection.add(task);
+				this.collection.push(task);
 			},
 		},
 	});
 
-	//global view
+	//edition global view
 	var EditLayout = Backbone.Marionette.Layout.extend({
 		'template': '#tpl-task-edit',
 		'regions': {
@@ -314,7 +340,8 @@
 				});
 				this.model.set('deps', deps_);
 
-				tasks.add(this.model);
+				tasks.push(this.model);
+				this.model.save();
 
 				// Return to the tasks list.
 				router.navigate('', {'trigger': true});
@@ -324,13 +351,13 @@
 		'onDomRefresh': function () {
 			tags = new Tags();
 			_.each(this.model.get('tags'), function (tag) {
-				tags.add({'name': tag});
+				tags.push({'name': tag});
 			});
 			this.tagsregion.show(new TaskTagsView({'collection': tags}));
 
 			deps = new Tasks();
 			_.each(this.model.get('deps'), function (task_id) {
-				deps.add(tasks.get(task_id));
+				deps.push(tasks.get(task_id));
 			});
 			deps.listenTo(tasks, 'remove', function (task) {
 				this.remove(task);
@@ -399,6 +426,11 @@
 	app.addRegions({'main': '#main'});
 	app.addInitializer(function () {
 		tasks = new Tasks();
+		tasks.fetch();
+		if (tasks.length)
+		{
+			task_id = tasks.last_id() + 1;
+		}
 		tasks_list_view = new TasksListView({
 			'collection': tasks,
 		});
@@ -406,7 +438,6 @@
 
 		router = new Router();
 		Backbone.history.start();
-		tasks.add(new Task({title: 'aaa'}));
 	});
 
 	$(function () {
